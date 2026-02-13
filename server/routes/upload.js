@@ -109,12 +109,13 @@ function parseWordDocument(text) {
   let currentPart = null;
   let currentQuestion = null;
   let questionNumber = 0;
+  let expectingOptions = false; // Track if we're expecting options after a question
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
     // Detect Part headers (e.g., "Part A", "Part A.", "Part A:", "Part A. 易混淆單字")
-    const partMatch = line.match(/^Part\s*([A-Z])[\.\:\s]*(.*)?$/i);
+    const partMatch = line.match(/^Part\s*([A-Z])[:\.\s]*(.*)?$/i);
     if (partMatch) {
       if (currentPart && currentQuestion) {
         currentPart.questions.push(currentQuestion);
@@ -130,24 +131,33 @@ function parseWordDocument(text) {
       };
       currentQuestion = null;
       questionNumber = 0;
+      expectingOptions = false;
       continue;
     }
 
+    // Skip if no current part
+    if (!currentPart) continue;
+
     // Detect description lines (after Part header, before questions)
-    if (currentPart && currentPart.questions.length === 0 && !line.match(/^\d+[\.\)]/)) {
+    if (currentPart.questions.length === 0 && !line.match(/^\d+[\.\)]/)) {
       if (line.toLowerCase().includes('choose') || 
           line.toLowerCase().includes('rewrite') ||
           line.toLowerCase().includes('sentence') ||
-          line.toLowerCase().includes('correct')) {
-        currentPart.description = line;
+          line.toLowerCase().includes('insert') ||
+          line.toLowerCase().includes('correct') ||
+          line.toLowerCase().includes('example')) {
+        if (!currentPart.description) {
+          currentPart.description = line;
+        } else {
+          currentPart.description += ' ' + line;
+        }
         continue;
       }
     }
 
     // Detect numbered questions (e.g., "1.", "1)", "1. The company...", "1.  The company...")
-    // More flexible regex to handle various whitespace scenarios
     const questionMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
-    if (questionMatch && currentPart) {
+    if (questionMatch) {
       // Save previous question
       if (currentQuestion) {
         currentPart.questions.push(currentQuestion);
@@ -156,16 +166,8 @@ function parseWordDocument(text) {
       questionNumber = parseInt(questionMatch[1]);
       const questionContent = questionMatch[2].trim();
 
-      // Determine question type based on content and part title
-      let type = 'multiple_choice';
-      if (currentPart.title.toLowerCase().includes('rewrite') ||
-          currentPart.description.toLowerCase().includes('rewrite')) {
-        type = 'rewrite';
-      } else if (currentPart.title.toLowerCase().includes('combining') ||
-                 currentPart.title.toLowerCase().includes('合併') ||
-                 currentPart.description.toLowerCase().includes('relative clause')) {
-        type = 'fill_in_blank';
-      }
+      // Determine question type
+      let type = determineQuestionType(currentPart, questionContent);
 
       currentQuestion = {
         content: questionContent,
@@ -174,32 +176,113 @@ function parseWordDocument(text) {
         correct_answer: '',
         points: 1
       };
+      expectingOptions = (type === 'multiple_choice');
       continue;
     }
 
     // Detect options (e.g., "A)", "A.", "(A)", "A) effective")
     const optionMatch = line.match(/^[\(]?([A-D])[\)\.\:]\s*(.+)$/i);
-    if (optionMatch && currentQuestion && currentQuestion.type === 'multiple_choice') {
-      currentQuestion.options.push(optionMatch[2].trim());
+    if (optionMatch) {
+      const optionText = optionMatch[2].trim();
+      
+      // If we see an option but no current question, the previous line might be the question
+      if (!currentQuestion && lines[i - 1] && lines[i - 1].trim().length > 0) {
+        const prevLine = lines[i - 1].trim();
+        
+        // Check if previous line looks like a question (contains blank _____ or ends with punctuation)
+        if (prevLine.includes('_') || prevLine.match(/[.?]$/)) {
+          questionNumber++;
+          const type = determineQuestionType(currentPart, prevLine);
+          
+          currentQuestion = {
+            content: prevLine,
+            type: type,
+            options: type === 'multiple_choice' ? [] : null,
+            correct_answer: '',
+            points: 1
+          };
+          expectingOptions = true;
+        }
+      }
+      
+      if (currentQuestion && currentQuestion.type === 'multiple_choice') {
+        currentQuestion.options.push(optionText);
+        expectingOptions = true;
+      }
       continue;
+    }
+
+    // If we were expecting more options but got something else, finalize the question
+    if (expectingOptions && currentQuestion && !line.match(/^[\(]?[A-D][\)\.\:]/i)) {
+      if (currentQuestion.options && currentQuestion.options.length >= 2) {
+        currentPart.questions.push(currentQuestion);
+        currentQuestion = null;
+        expectingOptions = false;
+      }
     }
 
     // Detect arrow for rewrite questions (e.g., "→ ___")
-    if (line.startsWith('→') && currentQuestion) {
-      // This is a placeholder for student answer, skip or use as hint
+    if (line.startsWith('→')) {
+      if (currentQuestion) {
+        currentPart.questions.push(currentQuestion);
+        currentQuestion = null;
+      }
       continue;
     }
 
-    // If we have a current question and the line doesn't match patterns,
-    // it might be a continuation of the question content
-    if (currentQuestion && !line.match(/^[\(]?[A-D][\)\.\:]/i) && !line.match(/^Part\s/i)) {
-      // Check if it's additional question content (like for rewrite questions)
-      if (currentQuestion.content && line.length > 0) {
-        // Could be part of the question or an example
-        if (line.startsWith('Example') || line.startsWith('Answer')) {
-          continue; // Skip example lines
-        }
+    // Skip example lines
+    if (line.toLowerCase().startsWith('example') || 
+        line.toLowerCase().startsWith('answer:') ||
+        line.toLowerCase().startsWith('active:') ||
+        line.toLowerCase().startsWith('passive:')) {
+      continue;
+    }
+
+    // Check for combining/rewrite questions FIRST: "sentence text (relative clause) → ____"
+    // This is more specific than the generic underscore check below
+    if (/\([^)]+\)[\s\S]*_{5,}/.test(line) && !currentQuestion && line.length > 20) {
+      // This is likely a combining/rewrite question
+      // Extract just the question part (remove everything after and including special chars + underscores)
+      const questionText = line.replace(/[→\u2192\-\s]*_{5,}.*$/, '').trim();
+      if (questionText.length > 10 && questionText.includes('(')) {
+        questionNumber++;
+        const type = determineQuestionType(currentPart, questionText);
+        
+        const newQuestion = {
+          content: questionText,
+          type: type,
+          options: null,
+          correct_answer: '',
+          points: 1
+        };
+        
+        currentPart.questions.push(newQuestion);
+        // Don't set currentQuestion since this is a complete question
       }
+      continue;
+    }
+
+    // Check if line contains a blank ________ (might be a question without number)
+    // This is a fallback for questions that don't match the more specific patterns above
+    if (line.includes('_____') && !currentQuestion && line.length > 20) {
+      // This looks like a question
+      questionNumber++;
+      const type = determineQuestionType(currentPart, line);
+      
+      currentQuestion = {
+        content: line,
+        type: type,
+        options: type === 'multiple_choice' ? [] : null,
+        correct_answer: '',
+        points: 1
+      };
+      expectingOptions = (type === 'multiple_choice');
+      continue;
+    }
+
+    // Skip lines that are just underscores (answer placeholders)
+    if (/^_{5,}/.test(line)) {
+      continue;
     }
   }
 
@@ -212,6 +295,24 @@ function parseWordDocument(text) {
   }
 
   return { parts };
+}
+
+// Helper function to determine question type
+function determineQuestionType(part, questionContent) {
+  if (!part) return 'multiple_choice';
+  
+  const title = part.title.toLowerCase();
+  const desc = part.description.toLowerCase();
+  
+  if (title.includes('rewrite') || desc.includes('rewrite') ||
+      title.includes('passive') || title.includes('active')) {
+    return 'rewrite';
+  } else if (title.includes('combining') || title.includes('合併') ||
+             desc.includes('relative clause') || desc.includes('inserting')) {
+    return 'fill_in_blank';
+  }
+  
+  return 'multiple_choice';
 }
 
 // Preview parsed document without creating exam
