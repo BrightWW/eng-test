@@ -100,7 +100,11 @@ router.post('/word', authenticateTeacher, upload.single('file'), async (req, res
 // Parse Word document text into structured data
 function parseWordDocument(text) {
   const parts = [];
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  // Clean lines but preserve internal whitespace structure initially
+  const lines = text.split('\n').map(l => {
+    // Replace tabs with single space for easier parsing
+    return l.replace(/\t+/g, ' ').trim();
+  }).filter(l => l);
 
   let currentPart = null;
   let currentQuestion = null;
@@ -140,8 +144,9 @@ function parseWordDocument(text) {
       }
     }
 
-    // Detect numbered questions (e.g., "1.", "1)", "1. The company...")
-    const questionMatch = line.match(/^(\d+)[\.\)]\s*(.*)$/);
+    // Detect numbered questions (e.g., "1.", "1)", "1. The company...", "1.  The company...")
+    // More flexible regex to handle various whitespace scenarios
+    const questionMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
     if (questionMatch && currentPart) {
       // Save previous question
       if (currentQuestion) {
@@ -149,7 +154,7 @@ function parseWordDocument(text) {
       }
 
       questionNumber = parseInt(questionMatch[1]);
-      const questionContent = questionMatch[2];
+      const questionContent = questionMatch[2].trim();
 
       // Determine question type based on content and part title
       let type = 'multiple_choice';
