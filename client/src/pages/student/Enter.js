@@ -21,7 +21,7 @@ const StudentEnter = () => {
     try {
       setLoading(true);
       await studentEnter(name.trim());
-      navigate('/student/exam');
+      navigate('/student/history');
     } catch (err) {
       setError(err.response?.data?.error || '發生錯誤，請稍後再試');
     } finally {

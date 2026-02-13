@@ -7,6 +7,7 @@ import examRoutes from './routes/exams.js';
 import partRoutes from './routes/parts.js';
 import submissionRoutes from './routes/submissions.js';
 import gradeRoutes from './routes/grades.js';
+import uploadRoutes from './routes/upload.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/exams', examRoutes);
 app.use('/api/parts', partRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/grades', gradeRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
