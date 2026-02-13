@@ -87,21 +87,6 @@ npm run client
 4. 逐題批改並給予評語
 5. 學生即可看到批改結果
 
-## 題型說明
-
-### Part A & B - 選擇題 (Multiple Choice)
-- 支援 2-4 個選項
-- 可設定正確答案
-
-### Part C & D - 改寫句子 (Rewrite/Fill-in-blank)
-- 學生填寫文字答案
-- 教師手動批改
-
-## 開發
-
-- 後端開發文件：[server/README.md](server/README.md)
-- 前端開發文件：[client/README.md](client/README.md)
-
 ## License
 
 MIT
