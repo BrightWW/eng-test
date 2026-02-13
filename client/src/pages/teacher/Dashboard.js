@@ -125,12 +125,17 @@ const TeacherDashboard = () => {
         <div className="card">
           <div className="flex-space-between mb-20">
             <h2 style={{ fontSize: '22px' }}>測驗管理</h2>
-            <button 
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="btn btn-primary"
-            >
-              {showCreateForm ? '取消' : '+ 建立新測驗'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Link to="/teacher/upload" className="btn btn-secondary">
+                📄 上傳 Word 檔
+              </Link>
+              <button 
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="btn btn-primary"
+              >
+                {showCreateForm ? '取消' : '+ 建立新測驗'}
+              </button>
+            </div>
           </div>
 
           {showCreateForm && (

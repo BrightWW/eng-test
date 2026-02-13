@@ -194,4 +194,68 @@ router.get('/:submissionId/detail', authenticateTeacher, (req, res) => {
   }
 });
 
+// Get all submissions for a student (student history)
+router.get('/student/:studentId/history', (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const submissions = db.prepare(`
+      SELECT s.*, e.title as exam_title, e.description as exam_description
+      FROM submissions s
+      JOIN exams e ON s.exam_id = e.id
+      WHERE s.student_id = ? AND s.status != 'in_progress'
+      ORDER BY s.submitted_at DESC
+    `).all(studentId);
+
+    res.json({ submissions });
+  } catch (error) {
+    console.error('Get student history error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get detailed result for a specific submission (for student view)
+router.get('/:submissionId/result', (req, res) => {
+  try {
+    const { submissionId } = req.params;
+
+    const submission = db.prepare(`
+      SELECT s.*, e.title as exam_title, st.name as student_name
+      FROM submissions s
+      JOIN exams e ON s.exam_id = e.id
+      JOIN students st ON s.student_id = st.id
+      WHERE s.id = ?
+    `).get(submissionId);
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    const answers = db.prepare(`
+      SELECT a.*, q.content, q.type, q.correct_answer, q.options, q.points,
+             p.title as part_title, p.order_num as part_order,
+             g.is_correct, g.score, g.comment, g.graded_at
+      FROM answers a
+      JOIN questions q ON a.question_id = q.id
+      JOIN parts p ON q.part_id = p.id
+      LEFT JOIN grades g ON g.answer_id = a.id
+      WHERE a.submission_id = ?
+      ORDER BY p.order_num, q.order_num
+    `).all(submissionId);
+
+    const answersWithParsedOptions = answers.map(a => ({
+      ...a,
+      options: a.options ? JSON.parse(a.options) : null
+    }));
+
+    res.json({
+      submission,
+      answers: answersWithParsedOptions
+    });
+  } catch (error) {
+    console.error('Get submission result error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
