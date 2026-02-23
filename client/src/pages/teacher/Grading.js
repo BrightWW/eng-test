@@ -50,9 +50,11 @@ const TeacherGrading = () => {
       setSelectedSubmission(submissionId);
 
       // Initialize grades state with existing grades
+      // Use question_id as key to support unanswered questions
       const initialGrades = {};
       response.data.answers.forEach(answer => {
-        initialGrades[answer.id] = {
+        initialGrades[answer.question_id] = {
+          answer_id: answer.id, // Store answer_id for later use
           is_correct: answer.is_correct !== null ? answer.is_correct : null,
           score: answer.score || 0,
           comment: answer.comment || ''
@@ -65,25 +67,37 @@ const TeacherGrading = () => {
     }
   };
 
-  const handleGradeChange = (answerId, field, value) => {
+  const handleGradeChange = (questionId, field, value) => {
     setGrades(prev => ({
       ...prev,
-      [answerId]: {
-        ...prev[answerId],
+      [questionId]: {
+        ...prev[questionId],
         [field]: value
       }
     }));
   };
 
-  const handleSaveGrade = async (answerId) => {
+  const handleSaveGrade = async (questionId) => {
     try {
-      const grade = grades[answerId];
+      const grade = grades[questionId];
       
       if (grade.is_correct === null) {
         alert('請選擇正確或錯誤');
         return;
       }
 
+      let answerId = grade.answer_id;
+      
+      // If no answer exists (unanswered question), create one first
+      if (!answerId) {
+        const answerRes = await api.post(`/submissions/${selectedSubmission}/answers`, {
+          question_id: questionId,
+          student_answer: null
+        });
+        answerId = answerRes.data.answer.id;
+      }
+
+      // Save the grade
       await api.post('/grades', {
         answer_id: answerId,
         is_correct: grade.is_correct,
@@ -105,25 +119,38 @@ const TeacherGrading = () => {
     }
 
     try {
-      // Check if all answers are graded
-      const ungradedAnswers = submissionDetail.answers.filter(
-        answer => grades[answer.id]?.is_correct === null
+      // Check if all questions are graded
+      const ungradedQuestions = submissionDetail.answers.filter(
+        answer => grades[answer.question_id]?.is_correct === null
       );
 
-      if (ungradedAnswers.length > 0) {
-        alert(`還有 ${ungradedAnswers.length} 題未批改`);
+      if (ungradedQuestions.length > 0) {
+        alert(`還有 ${ungradedQuestions.length} 題未批改`);
         return;
       }
 
-      // Save all grades first
-      const savePromises = submissionDetail.answers.map(answer => 
-        api.post('/grades', {
-          answer_id: answer.id,
-          is_correct: grades[answer.id].is_correct,
-          score: grades[answer.id].score || 0,
-          comment: grades[answer.id].comment || ''
-        })
-      );
+      // Save all grades first, creating answer records for unanswered questions
+      const savePromises = submissionDetail.answers.map(async (answer) => {
+        const grade = grades[answer.question_id];
+        let answerId = grade.answer_id;
+        
+        // Create answer record if it doesn't exist (unanswered question)
+        if (!answerId) {
+          const answerRes = await api.post(`/submissions/${selectedSubmission}/answers`, {
+            question_id: answer.question_id,
+            student_answer: null
+          });
+          answerId = answerRes.data.answer.id;
+        }
+        
+        // Save the grade
+        return api.post('/grades', {
+          answer_id: answerId,
+          is_correct: grade.is_correct,
+          score: grade.score || 0,
+          comment: grade.comment || ''
+        });
+      });
 
       await Promise.all(savePromises);
 
@@ -246,12 +273,12 @@ const TeacherGrading = () => {
 
             {submissionDetail.answers.map((answer, index) => (
               <div 
-                key={answer.id} 
+                key={answer.question_id} 
                 className="question"
                 style={{
-                  borderLeft: grades[answer.id]?.is_correct === true 
+                  borderLeft: grades[answer.question_id]?.is_correct === true 
                     ? '4px solid #4CAF50' 
-                    : grades[answer.id]?.is_correct === false 
+                    : grades[answer.question_id]?.is_correct === false 
                     ? '4px solid #f44336'
                     : '4px solid #ddd'
                 }}
@@ -322,15 +349,15 @@ const TeacherGrading = () => {
                     <label className="label">評分結果 *</label>
                     <div className="flex flex-gap">
                       <button
-                        onClick={() => handleGradeChange(answer.id, 'is_correct', true)}
-                        className={grades[answer.id]?.is_correct === true ? 'btn btn-primary' : 'btn'}
+                        onClick={() => handleGradeChange(answer.question_id, 'is_correct', true)}
+                        className={grades[answer.question_id]?.is_correct === true ? 'btn btn-primary' : 'btn'}
                         style={{ flex: 1 }}
                       >
                         ✓ 正確
                       </button>
                       <button
-                        onClick={() => handleGradeChange(answer.id, 'is_correct', false)}
-                        className={grades[answer.id]?.is_correct === false ? 'btn btn-danger' : 'btn'}
+                        onClick={() => handleGradeChange(answer.question_id, 'is_correct', false)}
+                        className={grades[answer.question_id]?.is_correct === false ? 'btn btn-danger' : 'btn'}
                         style={{ flex: 1 }}
                       >
                         ✗ 錯誤
@@ -343,8 +370,8 @@ const TeacherGrading = () => {
                     <input
                       type="number"
                       className="input"
-                      value={grades[answer.id]?.score || 0}
-                      onChange={(e) => handleGradeChange(answer.id, 'score', parseFloat(e.target.value) || 0)}
+                      value={grades[answer.question_id]?.score || 0}
+                      onChange={(e) => handleGradeChange(answer.question_id, 'score', parseFloat(e.target.value) || 0)}
                       min="0"
                       max={answer.points}
                       step="0.5"
@@ -355,15 +382,15 @@ const TeacherGrading = () => {
                     <label className="label">評語</label>
                     <textarea
                       className="textarea"
-                      value={grades[answer.id]?.comment || ''}
-                      onChange={(e) => handleGradeChange(answer.id, 'comment', e.target.value)}
+                      value={grades[answer.question_id]?.comment || ''}
+                      onChange={(e) => handleGradeChange(answer.question_id, 'comment', e.target.value)}
                       placeholder="給予學生回饋（選填）"
                       rows={2}
                     />
                   </div>
 
                   <button
-                    onClick={() => handleSaveGrade(answer.id)}
+                    onClick={() => handleSaveGrade(answer.question_id)}
                     className="btn btn-primary"
                   >
                     儲存此題批改
