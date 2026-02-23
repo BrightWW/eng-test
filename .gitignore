@@ -37,3 +37,7 @@ logs/
 # Testing
 coverage/
 .nyc_output/
+
+# Misc
+.github/
+workthrough/
