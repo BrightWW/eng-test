@@ -125,7 +125,7 @@ const StudentResultDetail = () => {
               </h2>
               
               {partData.answers.map((answer, index) => (
-                <div key={answer.id} className="question" style={{
+                <div key={answer.question_id} className="question" style={{
                   borderLeft: answer.is_correct ? '4px solid #4CAF50' : answer.is_correct === false ? '4px solid #f44336' : '4px solid #ddd'
                 }}>
                   <div style={{ marginBottom: '10px' }}>

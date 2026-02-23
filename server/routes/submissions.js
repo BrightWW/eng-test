@@ -167,17 +167,31 @@ router.get('/:submissionId/detail', authenticateTeacher, (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
+    // Modified: Start from questions table to include unanswered questions
     const answers = db.prepare(`
-      SELECT a.*, q.content, q.type, q.correct_answer, q.options, q.points,
-             p.title as part_title, p.order_num as part_order,
-             g.is_correct, g.score, g.comment, g.graded_at
-      FROM answers a
-      JOIN questions q ON a.question_id = q.id
+      SELECT 
+        q.id as question_id,
+        q.content, 
+        q.type, 
+        q.correct_answer, 
+        q.options, 
+        q.points,
+        q.order_num as question_order,
+        p.title as part_title, 
+        p.order_num as part_order,
+        a.id,
+        a.student_answer,
+        g.is_correct, 
+        g.score, 
+        g.comment, 
+        g.graded_at
+      FROM questions q
       JOIN parts p ON q.part_id = p.id
+      LEFT JOIN answers a ON a.question_id = q.id AND a.submission_id = ?
       LEFT JOIN grades g ON g.answer_id = a.id
-      WHERE a.submission_id = ?
+      WHERE p.exam_id = ?
       ORDER BY p.order_num, q.order_num
-    `).all(submissionId);
+    `).all(submissionId, submission.exam_id);
 
     const answersWithParsedOptions = answers.map(a => ({
       ...a,
@@ -231,17 +245,31 @@ router.get('/:submissionId/result', (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
+    // Modified: Start from questions table to include unanswered questions
     const answers = db.prepare(`
-      SELECT a.*, q.content, q.type, q.correct_answer, q.options, q.points,
-             p.title as part_title, p.order_num as part_order,
-             g.is_correct, g.score, g.comment, g.graded_at
-      FROM answers a
-      JOIN questions q ON a.question_id = q.id
+      SELECT 
+        q.id as question_id,
+        q.content, 
+        q.type, 
+        q.correct_answer, 
+        q.options, 
+        q.points,
+        q.order_num as question_order,
+        p.title as part_title, 
+        p.order_num as part_order,
+        a.id,
+        a.student_answer,
+        g.is_correct, 
+        g.score, 
+        g.comment, 
+        g.graded_at
+      FROM questions q
       JOIN parts p ON q.part_id = p.id
+      LEFT JOIN answers a ON a.question_id = q.id AND a.submission_id = ?
       LEFT JOIN grades g ON g.answer_id = a.id
-      WHERE a.submission_id = ?
+      WHERE p.exam_id = ?
       ORDER BY p.order_num, q.order_num
-    `).all(submissionId);
+    `).all(submissionId, submission.exam_id);
 
     const answersWithParsedOptions = answers.map(a => ({
       ...a,
