@@ -191,6 +191,7 @@ const TeacherDashboard = () => {
                   <th>測驗名稱</th>
                   <th>建立時間</th>
                   <th>狀態</th>
+                  <th>學生交卷狀態</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -211,6 +212,23 @@ const TeacherDashboard = () => {
                         <span className="badge badge-success">進行中</span>
                       ) : (
                         <span className="badge">未啟用</span>
+                      )}
+                    </td>
+                    <td>
+                      {exam.submission_stats ? (
+                        <div style={{ fontSize: '14px' }}>
+                          <div>
+                            <strong style={{ color: '#28a745' }}>
+                              已交卷：{exam.submission_stats.submitted}
+                            </strong>
+                          </div>
+                          <div style={{ color: '#666', marginTop: '3px' }}>
+                            作答中：{exam.submission_stats.in_progress} | 
+                            已批改：{exam.submission_stats.graded}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#999' }}>無資料</span>
                       )}
                     </td>
                     <td>
