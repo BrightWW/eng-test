@@ -108,12 +108,20 @@ const StudentResultDetail = () => {
           </div>
 
           {isGraded && (
-            <div className="flex-space-between">
-              <span>總分：</span>
-              <strong style={{ fontSize: '24px', color: '#4CAF50' }}>
-                {submission.total_score} 分
-              </strong>
-            </div>
+            <>
+              <div className="flex-space-between mb-20">
+                <span>答對題數：</span>
+                <strong style={{ fontSize: '28px', color: '#4CAF50' }}>
+                  {submission.total_score} / {answers.length} 題
+                </strong>
+              </div>
+              <div className="flex-space-between">
+                <span>正確率：</span>
+                <strong style={{ fontSize: '20px', color: '#2196F3' }}>
+                  {answers.length > 0 ? ((submission.total_score / answers.length) * 100).toFixed(1) : 0}%
+                </strong>
+              </div>
+            </>
           )}
         </div>
 
@@ -133,7 +141,7 @@ const StudentResultDetail = () => {
                     {answer.is_correct !== null && (
                       <span style={{ marginLeft: '10px' }}>
                         {answer.is_correct ? (
-                          <span className="badge badge-success">✓ 正確 ({answer.score} 分)</span>
+                          <span className="badge badge-success">✓ 正確</span>
                         ) : (
                           <span style={{ 
                             backgroundColor: '#f8d7da', 
@@ -142,7 +150,7 @@ const StudentResultDetail = () => {
                             borderRadius: '4px',
                             fontSize: '14px',
                             fontWeight: '600'
-                          }}>✗ 錯誤 ({answer.score} 分)</span>
+                          }}>✗ 錯誤</span>
                         )}
                       </span>
                     )}
