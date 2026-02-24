@@ -165,6 +165,21 @@ router.delete('/:id', authenticateTeacher, (req, res) => {
       return res.status(404).json({ error: 'Exam not found' });
     }
 
+    // 刪除關聯的數據（按照外鍵依賴順序）
+    // 1. 找出所有相關的 submissions
+    const submissions = db.prepare('SELECT id FROM submissions WHERE exam_id = ?').all(id);
+    
+    // 2. 對每個 submission，刪除 grades 和 answers (透過 CASCADE 會自動刪除)
+    //    但由於 submissions 沒有 ON DELETE CASCADE，需要手動刪除
+    for (const submission of submissions) {
+      // DELETE answers (會自動 CASCADE 刪除 grades)
+      db.prepare('DELETE FROM answers WHERE submission_id = ?').run(submission.id);
+    }
+    
+    // 3. 刪除 submissions
+    db.prepare('DELETE FROM submissions WHERE exam_id = ?').run(id);
+    
+    // 4. 刪除 exam (parts 和 questions 會通過 CASCADE 自動刪除)
     db.prepare('DELETE FROM exams WHERE id = ?').run(id);
 
     res.json({ message: 'Exam deleted' });
