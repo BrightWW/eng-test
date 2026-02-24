@@ -71,6 +71,27 @@ code {
   background-color: #da190b;
 }
 
+/* 操作按鈕組分隔線 */
+.action-divider {
+  border-left: 1px solid #ddd;
+  margin: 0 8px;
+  height: 30px;
+}
+
+/* 危險操作按鈕增強樣式 */
+.btn-danger-critical {
+  background-color: #f44336;
+  color: white;
+  border: 2px solid #d32f2f;
+  font-weight: 600;
+}
+
+.btn-danger-critical:hover {
+  background-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.3);
+  transform: translateY(-1px);
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

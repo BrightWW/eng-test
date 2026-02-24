@@ -80,17 +80,27 @@ const TeacherDashboard = () => {
   };
 
   const handleDeleteExam = async (examId, examTitle) => {
-    if (!window.confirm(`確定要刪除測驗「${examTitle}」嗎？此操作無法復原。`)) {
+    const confirmed = window.confirm(
+      `⚠️ 警告：您即將刪除測驗「${examTitle}」\n\n` +
+      `此操作將永久刪除：\n` +
+      `• 測驗的所有題目和段落\n` +
+      `• 所有學生的提交記錄\n` +
+      `• 所有批改結果和評語\n\n` +
+      `❗ 此操作無法復原！\n\n` +
+      `確定要繼續嗎？`
+    );
+    
+    if (!confirmed) {
       return;
     }
 
     try {
       await api.delete(`/exams/${examId}`);
-      alert('測驗已刪除');
+      alert('✅ 測驗已成功刪除');
       loadExams();
     } catch (err) {
       console.error('Delete exam error:', err);
-      alert(err.response?.data?.error || '刪除測驗失敗');
+      alert('❌ ' + (err.response?.data?.error || '刪除測驗失敗'));
     }
   };
 
@@ -218,12 +228,30 @@ const TeacherDashboard = () => {
                         >
                           {exam.is_active ? '停用' : '啟用'}
                         </button>
+                        
+                        {/* 視覺分隔線 - 區分常規操作和危險操作 */}
+                        <div style={{ 
+                          borderLeft: '1px solid #ddd', 
+                          margin: '0 8px', 
+                          height: '30px',
+                          alignSelf: 'center'
+                        }}></div>
+                        
+                        {/* 刪除測驗按鈕 - 加強標示 */}
                         <button
                           onClick={() => handleDeleteExam(exam.id, exam.title)}
                           className="btn btn-danger"
-                          style={{ padding: '6px 12px', fontSize: '14px' }}
+                          style={{ 
+                            padding: '6px 12px', 
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                          title="永久刪除此測驗及所有相關資料"
                         >
-                          刪除
+                          <span role="img" aria-label="delete">🗑️</span>
+                          刪除測驗
                         </button>
                       </div>
                     </td>
