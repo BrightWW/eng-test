@@ -3,6 +3,17 @@ import db from '../db/database.js';
 
 const router = express.Router();
 
+// Get all students (for selection list)
+router.get('/', (req, res) => {
+  try {
+    const students = db.prepare('SELECT id, name, created_at FROM students ORDER BY created_at DESC').all();
+    res.json({ students });
+  } catch (error) {
+    console.error('Get students error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Student enters by name (no password)
 router.post('/enter', (req, res) => {
   try {

@@ -76,7 +76,30 @@ router.get('/', authenticateTeacher, (req, res) => {
       ORDER BY e.created_at DESC
     `).all();
 
-    res.json({ exams });
+    // Add submission statistics for each exam
+    const examsWithStats = exams.map(exam => {
+      const stats = db.prepare(`
+        SELECT 
+          COUNT(*) as total_submissions,
+          SUM(CASE WHEN status = 'submitted' OR status = 'graded' THEN 1 ELSE 0 END) as submitted_count,
+          SUM(CASE WHEN status = 'graded' THEN 1 ELSE 0 END) as graded_count,
+          SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count
+        FROM submissions
+        WHERE exam_id = ?
+      `).get(exam.id);
+
+      return {
+        ...exam,
+        submission_stats: {
+          total: stats.total_submissions || 0,
+          submitted: stats.submitted_count || 0,
+          graded: stats.graded_count || 0,
+          in_progress: stats.in_progress_count || 0
+        }
+      };
+    });
+
+    res.json({ exams: examsWithStats });
   } catch (error) {
     console.error('Get exams error:', error);
     res.status(500).json({ error: 'Server error' });
