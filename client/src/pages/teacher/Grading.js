@@ -53,11 +53,25 @@ const TeacherGrading = () => {
       // Use question_id as key to support unanswered questions
       const initialGrades = {};
       response.data.answers.forEach(answer => {
+        // Convert 0/1 to boolean for is_correct
+        let isCorrect = null;
+        if (answer.is_correct === 1 || answer.is_correct === true) {
+          isCorrect = true;
+        } else if (answer.is_correct === 0 || answer.is_correct === false) {
+          isCorrect = false;
+        }
+
+        // Auto-mark unanswered questions as incorrect (if not yet graded)
+        const isUnanswered = !answer.student_answer || answer.student_answer.trim() === '';
+        if (isUnanswered && isCorrect === null) {
+          isCorrect = false;
+        }
+
         initialGrades[answer.question_id] = {
-          answer_id: answer.id, // Store answer_id for later use
-          is_correct: answer.is_correct !== null ? answer.is_correct : null,
-          score: answer.score || 0,
-          comment: answer.comment || ''
+          answer_id: answer.id,
+          is_correct: isCorrect,
+          comment: answer.comment || '',
+          auto_marked: isUnanswered && isCorrect === false && !answer.graded_at // Flag for auto-marked
         };
       });
       setGrades(initialGrades);
@@ -72,7 +86,9 @@ const TeacherGrading = () => {
       ...prev,
       [questionId]: {
         ...prev[questionId],
-        [field]: value
+        [field]: value,
+        // Remove auto_marked flag when teacher manually changes is_correct
+        ...(field === 'is_correct' && { auto_marked: false })
       }
     }));
   };
@@ -81,7 +97,7 @@ const TeacherGrading = () => {
     try {
       const grade = grades[questionId];
       
-      if (grade.is_correct === null) {
+      if (grade.is_correct === null || grade.is_correct === undefined) {
         alert('請選擇正確或錯誤');
         return;
       }
@@ -97,19 +113,18 @@ const TeacherGrading = () => {
         answerId = answerRes.data.answer.id;
       }
 
-      // Save the grade
+      // Save the grade (no score needed)
       await api.post('/grades', {
         answer_id: answerId,
         is_correct: grade.is_correct,
-        score: grade.score || 0,
         comment: grade.comment || ''
       });
 
-      alert('批改已儲存');
+      alert('✅ 批改已儲存');
       loadSubmissionDetail(selectedSubmission);
     } catch (err) {
       console.error('Save grade error:', err);
-      alert(err.response?.data?.error || '儲存批改失敗');
+      alert('❌ ' + (err.response?.data?.error || '儲存批改失敗'));
     }
   };
 
@@ -147,7 +162,6 @@ const TeacherGrading = () => {
         return api.post('/grades', {
           answer_id: answerId,
           is_correct: grade.is_correct,
-          score: grade.score || 0,
           comment: grade.comment || ''
         });
       });
@@ -312,11 +326,19 @@ const TeacherGrading = () => {
 
                 <div style={{ 
                   padding: '12px', 
-                  backgroundColor: '#f0f0f0', 
+                  backgroundColor: answer.student_answer && answer.student_answer.trim() ? '#f0f0f0' : '#ffebee', 
                   borderRadius: '4px',
-                  marginBottom: '15px'
+                  marginBottom: '15px',
+                  ...((!answer.student_answer || answer.student_answer.trim() === '') && {
+                    border: '2px dashed #ef5350'
+                  })
                 }}>
                   <strong>學生答案：</strong>
+                  {(!answer.student_answer || answer.student_answer.trim() === '') && (
+                    <span style={{ color: '#c62828', fontWeight: 'bold', marginLeft: '8px' }}>
+                      (未作答)
+                    </span>
+                  )}
                   <div style={{ marginTop: '5px' }}>
                     {answer.student_answer || '未作答'}
                   </div>
@@ -345,41 +367,72 @@ const TeacherGrading = () => {
                 }}>
                   <h4 style={{ marginBottom: '15px' }}>批改</h4>
 
+                  {/* 自動判定提示 */}
+                  {grades[answer.question_id]?.auto_marked && (
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#fff3e0',
+                      border: '1px solid #ffb74d',
+                      borderRadius: '4px',
+                      marginBottom: '15px',
+                      fontSize: '14px',
+                      color: '#e65100'
+                    }}>
+                      <span style={{ fontWeight: 'bold' }}>ℹ️ 自動判定：</span> 
+                      此題因學生未作答已自動標記為錯誤，如需修改請點選上方按鈕。
+                    </div>
+                  )}
+
+                  {/* 評分結果按鈕 */}
                   <div style={{ marginBottom: '15px' }}>
                     <label className="label">評分結果 *</label>
                     <div className="flex flex-gap">
                       <button
                         onClick={() => handleGradeChange(answer.question_id, 'is_correct', true)}
-                        className={grades[answer.question_id]?.is_correct === true ? 'btn btn-primary' : 'btn'}
-                        style={{ flex: 1 }}
+                        className={
+                          grades[answer.question_id]?.is_correct === true 
+                            ? 'btn btn-success-active'
+                            : 'btn btn-success-inactive'
+                        }
+                        style={{ 
+                          flex: 1,
+                          ...(grades[answer.question_id]?.is_correct === true && {
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            border: '2px solid #45a049',
+                            boxShadow: '0 0 0 3px rgba(76, 175, 80, 0.3)'
+                          })
+                        }}
                       >
                         ✓ 正確
                       </button>
                       <button
                         onClick={() => handleGradeChange(answer.question_id, 'is_correct', false)}
-                        className={grades[answer.question_id]?.is_correct === false ? 'btn btn-danger' : 'btn'}
-                        style={{ flex: 1 }}
+                        className={
+                          grades[answer.question_id]?.is_correct === false 
+                            ? 'btn btn-danger-active'
+                            : 'btn btn-danger-inactive'
+                        }
+                        style={{ 
+                          flex: 1,
+                          ...(grades[answer.question_id]?.is_correct === false && {
+                            backgroundColor: '#f44336',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            border: '2px solid #d32f2f',
+                            boxShadow: '0 0 0 3px rgba(244, 67, 54, 0.3)'
+                          })
+                        }}
                       >
                         ✗ 錯誤
                       </button>
                     </div>
                   </div>
 
+                  {/* 評語（選填） */}
                   <div style={{ marginBottom: '15px' }}>
-                    <label className="label">給分</label>
-                    <input
-                      type="number"
-                      className="input"
-                      value={grades[answer.question_id]?.score || 0}
-                      onChange={(e) => handleGradeChange(answer.question_id, 'score', parseFloat(e.target.value) || 0)}
-                      min="0"
-                      max={answer.points}
-                      step="0.5"
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label className="label">評語</label>
+                    <label className="label">評語（選填）</label>
                     <textarea
                       className="textarea"
                       value={grades[answer.question_id]?.comment || ''}

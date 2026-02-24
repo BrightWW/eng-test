@@ -106,12 +106,20 @@ const StudentResult = () => {
           </div>
 
           {isGraded && (
-            <div className="flex-space-between">
-              <span>總分：</span>
-              <strong style={{ fontSize: '24px', color: '#4CAF50' }}>
-                {submission.total_score} 分
-              </strong>
-            </div>
+            <>
+              <div className="flex-space-between mb-20">
+                <span>答對題數：</span>
+                <strong style={{ fontSize: '28px', color: '#4CAF50' }}>
+                  {submission.total_score} / {answers.length} 題
+                </strong>
+              </div>
+              <div className="flex-space-between">
+                <span>正確率：</span>
+                <strong style={{ fontSize: '20px', color: '#2196F3' }}>
+                  {answers.length > 0 ? ((submission.total_score / answers.length) * 100).toFixed(1) : 0}%
+                </strong>
+              </div>
+            </>
           )}
         </div>
 
