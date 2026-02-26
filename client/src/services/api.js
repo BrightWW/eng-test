@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// Use environment variable for API URL in production, fallback to proxy in development
+const baseURL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api` 
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
