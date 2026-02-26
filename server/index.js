@@ -27,6 +27,26 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/grades', gradeRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// API root - 顯示所有可用端點
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'English Test System API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      auth: '/api/auth',
+      students: '/api/students',
+      exams: '/api/exams',
+      parts: '/api/parts',
+      submissions: '/api/submissions',
+      grades: '/api/grades',
+      upload: '/api/upload',
+      health: '/api/health'
+    },
+    documentation: 'Access /api/health for system health check'
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'English Test API is running' });
@@ -38,7 +58,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📚 API documentation: http://localhost:${PORT}/api/health`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+  console.log(`📚 API accessible at http://localhost:${PORT}`);
+  console.log(`💡 Health check: http://localhost:${PORT}/api/health`);
 });
