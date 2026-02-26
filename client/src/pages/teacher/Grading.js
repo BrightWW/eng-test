@@ -121,7 +121,16 @@ const TeacherGrading = () => {
       });
 
       alert('✅ 批改已儲存');
-      loadSubmissionDetail(selectedSubmission);
+      
+      // 只更新當前題目的狀態，避免覆蓋其他未儲存的修改
+      setGrades(prev => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          answer_id: answerId,
+          graded_at: new Date().toISOString()
+        }
+      }));
     } catch (err) {
       console.error('Save grade error:', err);
       alert('❌ ' + (err.response?.data?.error || '儲存批改失敗'));
