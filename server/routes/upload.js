@@ -6,21 +6,29 @@ import { authenticateTeacher } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Configure multer for file upload
+// Configure multer for file upload (supports .docx and .txt)
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    const allowedMimes = [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    // Also check file extension for .txt files (some systems may report different mime types)
+    const isTxt = file.originalname.toLowerCase().endsWith('.txt');
+    const isDocx = file.originalname.toLowerCase().endsWith('.docx');
+    
+    if (allowedMimes.includes(file.mimetype) || isTxt || isDocx) {
       cb(null, true);
     } else {
-      cb(new Error('Only .docx files are allowed'));
+      cb(new Error('Only .docx and .txt files are allowed'));
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Parse Word document and create exam
+// Parse Word/TXT document and create exam
 router.post('/word', authenticateTeacher, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -32,9 +40,18 @@ router.post('/word', authenticateTeacher, upload.single('file'), async (req, res
       return res.status(400).json({ error: 'Exam title is required' });
     }
 
-    // Extract text from Word document
-    const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-    const text = result.value;
+    // Extract text based on file type
+    let text;
+    const isTxt = req.file.originalname.toLowerCase().endsWith('.txt');
+    
+    if (isTxt) {
+      // For TXT files, decode the buffer directly
+      text = req.file.buffer.toString('utf-8');
+    } else {
+      // For Word documents, use mammoth
+      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+      text = result.value;
+    }
 
     // Parse the document
     const parsedData = parseWordDocument(text);
@@ -97,7 +114,7 @@ router.post('/word', authenticateTeacher, upload.single('file'), async (req, res
   }
 });
 
-// Parse Word document text into structured data
+// Parse Word/TXT document text into structured data
 function parseWordDocument(text) {
   const parts = [];
   // Clean lines but preserve internal whitespace structure initially
@@ -116,8 +133,8 @@ function parseWordDocument(text) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Detect Part headers (e.g., "Part A", "Part A.", "Part A:", "Part A. 易混淆單字")
-    const partMatch = line.match(/^Part\s*([A-Z])[:\.\s]*(.*)?$/i);
+    // Detect Part headers (e.g., "Part A", "Part A.", "Part A:", "Part 1:", "Part 1: Grammar Questions")
+    const partMatch = line.match(/^Part\s*([A-Z0-9]+)[:\.\s]*(.*)?$/i);
     if (partMatch) {
       if (currentPart && currentQuestion) {
         currentPart.questions.push(currentQuestion);
@@ -141,9 +158,9 @@ function parseWordDocument(text) {
     if (!currentPart) continue;
 
     // Detect answer section header (various formats) - Check early to stop parsing questions
-    // Supports: "Answer Key:", "標準答案:", "答案:", "Answer:", "英文時態測驗：標準答案 (Answer Key)"
-    const answerHeaderMatch = line.match(/(Answer\s*Key|標準答案|答案|Answers?)/i);
-    if (answerHeaderMatch && (line.includes('Answer') || line.includes('答案'))) {
+    // Supports: "Answer Key:", "標準答案:", "答案:", "Answer:", "英文時態測驗：標準答案 (Answer Key)", "【解答區】"
+    const answerHeaderMatch = line.match(/(Answer\s*Key|標準答案|答案|Answers?|【解答區】)/i);
+    if (answerHeaderMatch && (line.includes('Answer') || line.includes('答案') || line.includes('解答'))) {
       // Save current question before stopping
       if (currentQuestion && currentPart) {
         currentPart.questions.push(currentQuestion);
@@ -445,9 +462,10 @@ function parseWordDocument(text) {
 }
 
 // Helper function to parse the answer section at the end of document
-// Supports two formats:
+// Supports multiple formats:
 // 1. Part-based: "Part A: 1. B  2. A  3. C" or separate lines per Part
 // 2. Global list: Each line is one answer in order (e.g., "B (說明)" or "has been studying")
+// 3. TXT format: "(C) 2. (C) 3. (B) 4. (C) 5. (B)" - mixed numbered and unnumbered answers
 function parseAnswerSection(lines, answerSectionStart) {
   const partAnswers = {}; // { 'A': { 1: 'B', 2: 'A' }, 'B': { 1: 'The book was written.' } }
   const globalAnswers = []; // Array of answers in order
@@ -457,11 +475,16 @@ function parseAnswerSection(lines, answerSectionStart) {
   for (let i = answerSectionStart; i < lines.length; i++) {
     const line = lines[i];
     
-    // Skip empty lines
+    // Skip empty lines and non-answer content
     if (!line) continue;
+    // Skip explanation/analysis sections
+    if (line.includes('【重點解析】') || line.includes('解析') || line.startsWith('•') || line.startsWith('o')) continue;
+    // Skip header-like lines with brackets or common labels
+    if (/^[【\[].*[】\]]$/.test(line)) continue; // Lines that are just bracketed text like 【解答區】
+    if (/^(說明|備註|Note|Explanation)/i.test(line)) continue;
     
-    // Check for Part header in answer section (e.g., "Part A:", "Part A.", "Part B:")
-    const partMatch = line.match(/^Part\s*([A-Z])[:\.\s]/i);
+    // Check for Part header in answer section (e.g., "Part A:", "Part A.", "Part B:", "Part 1:")
+    const partMatch = line.match(/^Part\s*([A-Z0-9]+)[:\.\s]/i);
     if (partMatch) {
       hasPartStructure = true;
       currentPartKey = partMatch[1].toUpperCase();
@@ -481,10 +504,17 @@ function parseAnswerSection(lines, answerSectionStart) {
     if (hasPartStructure && currentPartKey) {
       parseAnswersFromLine(line, partAnswers[currentPartKey]);
     } else {
-      // No Part structure - parse as global answer list (one answer per line)
-      const answer = extractSingleAnswer(line);
-      if (answer) {
-        globalAnswers.push(answer);
+      // No Part structure - parse as global answer list
+      // Handle TXT format: "(C) 2. (C) 3. (B) 4. (C) 5. (B)"
+      const txtFormatAnswers = parseTxtAnswerLine(line);
+      if (txtFormatAnswers.length > 0) {
+        globalAnswers.push(...txtFormatAnswers);
+      } else {
+        // Fallback: one answer per line
+        const answer = extractSingleAnswer(line);
+        if (answer) {
+          globalAnswers.push(answer);
+        }
       }
     }
   }
@@ -492,12 +522,42 @@ function parseAnswerSection(lines, answerSectionStart) {
   return { partAnswers, globalAnswers };
 }
 
+// Parse TXT format answer line like "(C) 2. (C) 3. (B) 4. (C) 5. (B)"
+// Returns array of answers in order
+function parseTxtAnswerLine(line) {
+  const answers = [];
+  
+  // Match patterns like "(C)", "2. (C)", "2.(C)", "2.  (C)"
+  const pattern = /(?:(\d+)[\.\)]\s*)?\(([A-D])\)/gi;
+  let match;
+  let lastIndex = -1;
+  
+  while ((match = pattern.exec(line)) !== null) {
+    const answer = match[2].toUpperCase();
+    answers.push(answer);
+    lastIndex = match.index;
+  }
+  
+  return answers;
+}
+
 // Extract a single answer from a line
 // Formats: "B", "B (說明)", "has been studying (或 has studied)", "will call"
+// Returns null for non-answer lines (headers, labels, etc.)
 function extractSingleAnswer(line) {
   if (!line || line.trim() === '') return null;
   
   let answer = line.trim();
+  
+  // Skip lines that look like headers or labels (not actual answers)
+  // - Contains brackets like 【】or []
+  // - Contains common header keywords
+  // - Is too short to be meaningful (single character that's not A-D)
+  // - Contains only punctuation or special characters
+  if (/[【】\[\]]/.test(answer)) return null;
+  if (/^(答案|解答|Answer|Key|說明|解析|備註|Note)/i.test(answer)) return null;
+  if (answer.length === 1 && !/^[A-D]$/i.test(answer)) return null;
+  if (/^[^\w\u4e00-\u9fff]+$/.test(answer)) return null; // Only punctuation/symbols
   
   // If line starts with a single letter A-D followed by space or parenthesis, it's a multiple choice answer
   const mcMatch = answer.match(/^([A-D])\s*(\(|$)/i);
@@ -514,33 +574,53 @@ function extractSingleAnswer(line) {
     if (/^[A-D]$/i.test(mainAnswer)) {
       return mainAnswer.toUpperCase();
     }
+    // Skip if main answer looks like a header/label
+    if (/[【】\[\]]/.test(mainAnswer)) return null;
     // Otherwise return the main answer
     return mainAnswer;
   }
+  
+  // Final validation: answer should contain actual content (letters, numbers, or Chinese characters)
+  // Skip lines that are purely structural (bullets, dashes, etc.)
+  if (!/[a-zA-Z0-9\u4e00-\u9fff]/.test(answer)) return null;
   
   // Return the whole line as the answer
   return answer;
 }
 
 // Parse individual answers from a line
-// Supports: "1. B", "1) B", "1: B", "1. The book was written by him."
-// Also supports multiple answers on one line: "1. B  2. A  3. C"
+// Supports: "1. B", "1) B", "1: B", "1. (C)", "1. The book was written by him."
+// Also supports multiple answers on one line: "1. B  2. A  3. C" or "1. (C) 2. (C) 3. (B)"
 function parseAnswersFromLine(line, partAnswers) {
   // Pattern to match "number. answer" or "number) answer" or "number: answer"
-  const answerPattern = /(\d+)[\.):\s]+([^\d]+?)(?=\s+\d+[\.):]|$)/g;
+  // Also handles "number. (X)" format
+  const answerPattern = /(\d+)[\.):\s]+\(?([A-D])\)?(?:\s|$)|(\d+)[\.):\s]+([^\d]+?)(?=\s+\d+[\.):]|$)/gi;
   let match;
   
   while ((match = answerPattern.exec(line)) !== null) {
-    const questionNum = parseInt(match[1]);
-    let answer = match[2].trim();
-    
-    // Remove trailing punctuation if it's just a letter answer
-    if (answer.length <= 2) {
-      answer = answer.replace(/[,;.\s]+$/, '').toUpperCase();
-    }
-    
-    if (answer) {
+    // Handle format "1. (C)" or "1. C"
+    if (match[1] && match[2]) {
+      const questionNum = parseInt(match[1]);
+      const answer = match[2].toUpperCase();
       partAnswers[questionNum] = answer;
+    } 
+    // Handle format "1. full answer text"
+    else if (match[3] && match[4]) {
+      const questionNum = parseInt(match[3]);
+      let answer = match[4].trim();
+      
+      // Check if answer is in parentheses format like "(C)"
+      const parenMatch = answer.match(/^\(([A-D])\)/i);
+      if (parenMatch) {
+        answer = parenMatch[1].toUpperCase();
+      } else if (answer.length <= 2) {
+        // Remove trailing punctuation if it's just a letter answer
+        answer = answer.replace(/[,;.\s]+$/, '').toUpperCase();
+      }
+      
+      if (answer) {
+        partAnswers[questionNum] = answer;
+      }
     }
   }
 }
@@ -561,7 +641,13 @@ function determineQuestionType(part, questionContent) {
              desc.includes('complete') || desc.includes('correct form')) {
     return 'fill_in_blank';
   } else if (title.includes('multiple') || title.includes('choice') || 
-             title.includes('選擇') || title.includes('單選')) {
+             title.includes('選擇') || title.includes('單選') ||
+             title.includes('grammar')) {
+    return 'multiple_choice';
+  }
+  
+  // Check question content for hints
+  if (questionContent && questionContent.includes('(A)') && questionContent.includes('(B)')) {
     return 'multiple_choice';
   }
   
@@ -575,8 +661,17 @@ router.post('/word/preview', authenticateTeacher, upload.single('file'), async (
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-    const text = result.value;
+    // Extract text based on file type
+    let text;
+    const isTxt = req.file.originalname.toLowerCase().endsWith('.txt');
+    
+    if (isTxt) {
+      text = req.file.buffer.toString('utf-8');
+    } else {
+      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+      text = result.value;
+    }
+    
     const parsedData = parseWordDocument(text);
 
     res.json({

@@ -20,8 +20,9 @@ const UploadExam = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (!selectedFile.name.endsWith('.docx')) {
-        setError('請上傳 .docx 格式的 Word 檔案');
+      const fileName = selectedFile.name.toLowerCase();
+      if (!fileName.endsWith('.docx') && !fileName.endsWith('.txt')) {
+        setError('請上傳 .docx 或 .txt 格式的檔案');
         return;
       }
       setFile(selectedFile);
@@ -93,8 +94,8 @@ const UploadExam = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>上傳 Word 檔建立測驗</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>支援 .docx 格式</p>
+            <h1 style={{ fontSize: '24px' }}>上傳檔案建立測驗</h1>
+            <p style={{ color: '#666', marginTop: '5px' }}>支援 .docx 及 .txt 格式</p>
           </div>
           <Link to="/teacher/dashboard" className="btn btn-secondary">
             返回控制台
@@ -113,7 +114,7 @@ const UploadExam = () => {
           <div style={{ marginBottom: '20px' }}>
             <input
               type="file"
-              accept=".docx"
+              accept=".docx,.txt"
               onChange={handleFileChange}
               style={{ marginBottom: '10px' }}
             />
