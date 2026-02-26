@@ -61,17 +61,40 @@ const TeacherGrading = () => {
           isCorrect = false;
         }
 
-        // Auto-mark unanswered questions as incorrect (if not yet graded)
         const isUnanswered = !answer.student_answer || answer.student_answer.trim() === '';
-        if (isUnanswered && isCorrect === null) {
-          isCorrect = false;
+        let autoMarkedUnanswered = false;
+        let autoGradedMultipleChoice = false;
+
+        // If not yet graded, check for auto-grading conditions
+        if (isCorrect === null) {
+          // Auto-grade multiple choice questions with correct_answer
+          if (answer.type === 'multiple_choice' && answer.correct_answer && answer.options) {
+            const studentAnswer = (answer.student_answer || '').trim();
+            const correctAnswerLetter = answer.correct_answer.trim().toUpperCase();
+            
+            // Convert letter (A, B, C, D) to option index and get the option text
+            const letterIndex = correctAnswerLetter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+            const correctOptionText = answer.options[letterIndex];
+            
+            // Compare student answer with the correct option text
+            if (correctOptionText) {
+              isCorrect = studentAnswer === correctOptionText;
+              autoGradedMultipleChoice = true;
+            }
+          } 
+          // Auto-mark unanswered questions as incorrect
+          else if (isUnanswered) {
+            isCorrect = false;
+            autoMarkedUnanswered = true;
+          }
         }
 
         initialGrades[answer.question_id] = {
           answer_id: answer.id,
           is_correct: isCorrect,
           comment: answer.comment || '',
-          auto_marked: isUnanswered && isCorrect === false && !answer.graded_at // Flag for auto-marked
+          auto_marked: autoMarkedUnanswered && !answer.graded_at, // Flag for auto-marked unanswered
+          auto_graded_mc: autoGradedMultipleChoice && !answer.graded_at // Flag for auto-graded multiple choice
         };
       });
       setGrades(initialGrades);
@@ -87,8 +110,8 @@ const TeacherGrading = () => {
       [questionId]: {
         ...prev[questionId],
         [field]: value,
-        // Remove auto_marked flag when teacher manually changes is_correct
-        ...(field === 'is_correct' && { auto_marked: false })
+        // Remove auto flags when teacher manually changes is_correct
+        ...(field === 'is_correct' && { auto_marked: false, auto_graded_mc: false })
       }
     }));
   };
@@ -389,6 +412,24 @@ const TeacherGrading = () => {
                     }}>
                       <span style={{ fontWeight: 'bold' }}>ℹ️ 自動判定：</span> 
                       此題因學生未作答已自動標記為錯誤，如需修改請點選上方按鈕。
+                    </div>
+                  )}
+
+                  {/* 選擇題自動批改提示 */}
+                  {grades[answer.question_id]?.auto_graded_mc && (
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: grades[answer.question_id]?.is_correct ? '#e8f5e9' : '#ffebee',
+                      border: `1px solid ${grades[answer.question_id]?.is_correct ? '#81c784' : '#e57373'}`,
+                      borderRadius: '4px',
+                      marginBottom: '15px',
+                      fontSize: '14px',
+                      color: grades[answer.question_id]?.is_correct ? '#2e7d32' : '#c62828'
+                    }}>
+                      <span style={{ fontWeight: 'bold' }}>
+                        {grades[answer.question_id]?.is_correct ? '✓ 自動批改：' : '✗ 自動批改：'}
+                      </span> 
+                      此選擇題已根據參考答案自動批改為{grades[answer.question_id]?.is_correct ? '正確' : '錯誤'}，如需修改請點選下方按鈕。
                     </div>
                   )}
 

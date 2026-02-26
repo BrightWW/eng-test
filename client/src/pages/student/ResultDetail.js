@@ -160,20 +160,52 @@ const StudentResultDetail = () => {
 
                   {answer.type === 'multiple_choice' && answer.options && (
                     <div style={{ marginTop: '10px', marginBottom: '15px' }}>
-                      {answer.options.map((opt, i) => (
-                        <div 
-                          key={i} 
-                          style={{ 
-                            padding: '8px', 
-                            marginBottom: '5px',
-                            backgroundColor: answer.student_answer === opt ? '#e8f5e9' : '#f5f5f5',
-                            borderRadius: '4px',
-                            border: answer.student_answer === opt ? '2px solid #4CAF50' : '1px solid #ddd'
-                          }}
-                        >
-                          <strong>{String.fromCharCode(65 + i)})</strong> {opt}
-                        </div>
-                      ))}
+                      {answer.options.map((opt, i) => {
+                        const isStudentAnswer = answer.student_answer === opt;
+                        const correctLetter = answer.correct_answer?.trim().toUpperCase();
+                        const correctIndex = correctLetter ? correctLetter.charCodeAt(0) - 65 : -1;
+                        const isCorrectOption = i === correctIndex;
+                        const showCorrectAnswer = !answer.is_correct && isCorrectOption && answer.correct_answer;
+                        
+                        return (
+                          <div 
+                            key={i} 
+                            style={{ 
+                              padding: '8px', 
+                              marginBottom: '5px',
+                              backgroundColor: showCorrectAnswer ? '#e3f2fd' : (isStudentAnswer ? (answer.is_correct ? '#e8f5e9' : '#ffebee') : '#f5f5f5'),
+                              borderRadius: '4px',
+                              border: showCorrectAnswer 
+                                ? '2px solid #2196F3'
+                                : (isStudentAnswer 
+                                  ? (answer.is_correct ? '2px solid #4CAF50' : '2px solid #f44336')
+                                  : '1px solid #ddd')
+                            }}
+                          >
+                            <strong>{String.fromCharCode(65 + i)})</strong> {opt}
+                            {showCorrectAnswer && (
+                              <span style={{ 
+                                marginLeft: '10px', 
+                                color: '#1565c0', 
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                              }}>
+                                ← 正確答案
+                              </span>
+                            )}
+                            {isStudentAnswer && !answer.is_correct && (
+                              <span style={{ 
+                                marginLeft: '10px', 
+                                color: '#c62828', 
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                              }}>
+                                (你的選擇)
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   
@@ -182,13 +214,36 @@ const StudentResultDetail = () => {
                       <strong>你的答案：</strong>
                       <div style={{ 
                         padding: '10px', 
-                        backgroundColor: '#f5f5f5', 
+                        backgroundColor: answer.is_correct ? '#e8f5e9' : '#ffebee', 
                         borderRadius: '4px',
-                        marginTop: '5px'
+                        marginTop: '5px',
+                        border: answer.is_correct ? '1px solid #81c784' : '1px solid #e57373'
                       }}>
                         {answer.student_answer || '未作答'}
                       </div>
                     </div>
+
+                    {/* 選擇題答錯或未作答時顯示正確答案 */}
+                    {answer.type === 'multiple_choice' && !answer.is_correct && answer.correct_answer && answer.options && (() => {
+                      const correctLetter = answer.correct_answer.trim().toUpperCase();
+                      const correctIndex = correctLetter.charCodeAt(0) - 65;
+                      const correctOptionText = answer.options[correctIndex];
+                      return (
+                        <div style={{ marginBottom: '10px' }}>
+                          <strong>正確答案：</strong>
+                          <div style={{ 
+                            padding: '10px', 
+                            backgroundColor: '#e3f2fd', 
+                            borderRadius: '4px',
+                            marginTop: '5px',
+                            border: '1px solid #64b5f6',
+                            color: '#1565c0'
+                          }}>
+                            <strong>({correctLetter})</strong> {correctOptionText}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {answer.comment && (
                       <div style={{ marginTop: '10px' }}>
