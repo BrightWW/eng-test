@@ -1,0 +1,45 @@
+英文文法實力測驗 (English Grammar Proficiency Test)
+Instructions: Please choose the best answer for each question. Topics: Participles (V-ing / p.p.) & Pronouns
+Part 1: Grammar Questions
+1.	The management team is currently reviewing the _____ proposals from the marketing department. (A) submit (B) submitting (C) submitted (D) submits
+2.	Any customers _____ in line for the special promotion should proceed to Counter 3. (A) wait (B) waited (C) waiting (D) to wait
+3.	Please ensure that all _____ documents are signed before you hand in your application. (A) attach (B) attached (C) attaching (D) attaches
+4.	The CEO was very _____ with the quarterly sales figures presented by the team. (A) please (B) pleasing (C) pleased (D) pleasant
+5.	Due to climate change, there is a _____ demand for renewable energy sources globally. (A) grow (B) growing (C) grown (D) grows
+6.	The store policy clearly states that we do not accept returns of _____ goods without a receipt. (A) damage (B) damaging (C) damaged (D) damages
+7.	All staff members _____ in the new software project will receive an extra bonus this month. (A) involve (B) involving (C) involved (D) involves
+8.	After an _____ 12-hour shift at the hospital, the nurse just wanted to go home and sleep. (A) exhaust (B) exhausted (C) exhausting (D) exhausts
+9.	You can always find the most _____ schedule for our workshops on the official website. (A) update (B) updating (C) updated (D) updates
+10.	People _____ late at the concert will not be allowed to enter until the intermission. (A) arrive (B) arriving (C) arrived (D) to arrive
+11.	The new security system is highly effective, and _____ has already prevented several potential thefts. (A) he (B) they (C) it (D) she
+12.	The candidate _____ impressed the interview panel the most was offered the management position. (A) which (B) who (C) whom (D) what
+13.	This printer seems to be out of ink. Could you please use _____ one in the next room? (A) other (B) another (C) others (D) the others
+14.	The board of directors reviewed the annual budget report, and _____ decided to cut marketing expenses. (A) it (B) he (C) they (D) we
+15.	The financial report _____ was submitted yesterday contains a few minor calculation errors. (A) who (B) whom (C) which (D) whose
+16.	Some employees prefer working from home, while _____ find it more productive to be in the office environment. (A) other (B) another (C) others (D) each other
+17.	The important legal documents were sent by express courier, so _____ should arrive by tomorrow morning. (A) it (B) them (C) they (D) its
+18.	We have successfully finished the first phase. Now, let's focus on the _____ tasks on the project schedule. (A) another (B) other (C) others (D) the another
+19.	The latest software update, _____ took almost three hours to install, finally fixed the system bugs. (A) who (B) that (C) which (D) whom
+20.	If this design does not meet the client's expectations, our team will have to come up with _____. (A) another (B) other (C) others (D) the others
+
+
+
+
+
+
+
+標準答案與解析 (Answer Key & Explanations)
+【解答區】
+1.	(C) 2. (C) 3. (B) 4. (C) 5. (B)
+2.	(C) 7. (C) 8. (C) 9. (C) 10. (B)
+3.	(C) 12. (B) 13. (B) 14. (C) 15. (C)
+4.	(C) 17. (C) 18. (B) 19. (C) 20. (A)
+【重點解析】
+•	Q1-Q10 (分詞 V-ing / p.p.):
+o	主動/進行 (V-ing)： 用於修飾主動做出該動作的名詞。例如 Q2 的 waiting (正在排隊的顧客)、Q5 的 growing (正在成長的需求)、Q8 的 exhausting (令人疲憊的輪班)、Q10 的 arriving (主動抵達的人)。
+o	被動/完成 (p.p.)： 用於修飾承受該動作的名詞。例如 Q1 的 submitted (被提交的提案)、Q3 的 attached (被附上的文件)、Q4 的 pleased (感到滿意的CEO)、Q6 的 damaged (被損壞的商品)、Q7 的 involved (被捲入/參與其中的員工)、Q9 的 updated (被更新的時程表)。
+•	Q11-Q20 (代名詞):
+o	it / they： Q11 代指單數事物 (the security system) 用 it；Q14 代指複數名詞 (The board of directors 董事會成員) 用 they；Q17 代指複數事物 (documents) 用 they。
+o	who / which： Q12 先行詞為人 (candidate) 用 who 作主詞；Q15 先行詞為事物 (financial report) 用 which；Q19 為非限定用法（有逗號），先行詞為事物 (software update) 只能用 which。
+o	another / other / others： Q13 指「另一個(單數)」用 another；Q16 搭配 Some... 形成「有些人...而其他人...」用 others；Q18 修飾後方的複數名詞 (tasks) 作為形容詞用 other；Q20 指「(單數的)另一個設計」且後方省略了名詞，直接用 another 當代名詞。
+
