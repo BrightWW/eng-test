@@ -154,8 +154,14 @@ function parseWordDocument(text) {
       continue;
     }
 
-    // Skip if no current part
-    if (!currentPart) continue;
+    if (!currentPart) {
+      currentPart = {
+        title: 'Part 1',
+        description: '',
+        questions: [],
+        type: 'short_answer'
+      };
+    }
 
     // Detect answer section header (various formats) - Check early to stop parsing questions
     // Supports: "Answer Key:", "標準答案:", "答案:", "Answer:", "英文時態測驗：標準答案 (Answer Key)", "【解答區】"
@@ -646,12 +652,16 @@ function determineQuestionType(part, questionContent) {
     return 'multiple_choice';
   }
   
-  // Check question content for hints
   if (questionContent && questionContent.includes('(A)') && questionContent.includes('(B)')) {
     return 'multiple_choice';
   }
+
+  const shortAnswerKeywords = ['short answer', '簡答', '回答問題', '問答'];
+  if (shortAnswerKeywords.some(kw => title.includes(kw) || desc.includes(kw))) {
+    return 'short_answer';
+  }
   
-  return 'multiple_choice';
+  return 'short_answer';
 }
 
 // Preview parsed document without creating exam
