@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS parts (
 CREATE TABLE IF NOT EXISTS questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     part_id INTEGER NOT NULL,
-    type TEXT NOT NULL CHECK(type IN ('multiple_choice', 'fill_in_blank', 'rewrite')),
+    type TEXT NOT NULL CHECK(type IN ('multiple_choice', 'fill_in_blank', 'rewrite', 'short_answer')),
     content TEXT NOT NULL,
     options TEXT,  -- JSON array for multiple choice options
     correct_answer TEXT,  -- For reference, but teacher grades manually

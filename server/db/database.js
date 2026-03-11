@@ -126,6 +126,45 @@ if (isNewDatabase || needsInitialization()) {
   console.log('💾 Database saved');
 }
 
+// Runtime migration: Add short_answer to questions type CHECK constraint
+try {
+  const result = db.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='questions'");
+  if (result.length > 0 && result[0].values.length > 0) {
+    const currentSchema = result[0].values[0][0];
+    if (!currentSchema.includes('short_answer')) {
+      console.log('🔄 Running migration: Adding short_answer question type...');
+      
+      // Backup existing data
+      db.run("CREATE TABLE questions_backup AS SELECT * FROM questions");
+      db.run("DROP TABLE questions");
+      
+      // Recreate table with updated CHECK constraint
+      const newTableSchema = `CREATE TABLE questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    part_id INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('multiple_choice', 'fill_in_blank', 'rewrite', 'short_answer')),
+    content TEXT NOT NULL,
+    options TEXT,
+    correct_answer TEXT,
+    order_num INTEGER NOT NULL,
+    points INTEGER DEFAULT 1,
+    FOREIGN KEY (part_id) REFERENCES parts(id) ON DELETE CASCADE
+)`;
+      
+      db.run(newTableSchema);
+      
+      // Restore data
+      db.run("INSERT INTO questions SELECT * FROM questions_backup");
+      db.run("DROP TABLE questions_backup");
+      
+      saveDatabase();
+      console.log('✅ Migration completed: short_answer type added');
+    }
+  }
+} catch (err) {
+  console.error('❌ Migration error (non-fatal):', err.message);
+}
+
 // Enable foreign keys
 dbWrapper.pragma('foreign_keys = ON');
 
