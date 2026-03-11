@@ -41,6 +41,6 @@ coverage/
 # Misc
 .github/
 workthrough/
-.sisyphus/*
+.sisyphus/
 .opencode/
 nul

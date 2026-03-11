@@ -222,8 +222,8 @@ const TeacherGrading = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>{exam?.title}</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>批改測驗</p>
+            <h1 className="text-xl">{exam?.title}</h1>
+            <p className="text-muted mt-sm">批改測驗</p>
           </div>
           <Link to="/teacher/dashboard" className="btn btn-secondary">
             返回控制台
@@ -233,10 +233,10 @@ const TeacherGrading = () => {
 
       <div className="container">
         <div className="card">
-          <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>學生提交列表</h2>
+          <h2 className="text-xl mb-20">學生提交列表</h2>
           
           {submissions.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            <div className="empty-state">
               目前沒有學生提交
             </div>
           ) : (
@@ -254,9 +254,7 @@ const TeacherGrading = () => {
                 {submissions.map((submission) => (
                   <tr 
                     key={submission.id}
-                    style={{ 
-                      backgroundColor: selectedSubmission === submission.id ? '#e8f5e9' : 'transparent'
-                    }}
+                    className={selectedSubmission === submission.id ? 'row--selected' : ''}
                   >
                     <td><strong>{submission.student_name}</strong></td>
                     <td>{new Date(submission.submitted_at).toLocaleString('zh-TW')}</td>
@@ -277,8 +275,7 @@ const TeacherGrading = () => {
                     <td>
                       <button
                         onClick={() => loadSubmissionDetail(submission.id)}
-                        className="btn btn-primary"
-                        style={{ padding: '6px 12px', fontSize: '14px' }}
+                        className="btn btn-primary btn-sm"
                       >
                         {submission.status === 'graded' ? '查看' : '批改'}
                       </button>
@@ -293,7 +290,7 @@ const TeacherGrading = () => {
         {submissionDetail && (
           <div className="card">
             <div className="flex-space-between mb-20">
-              <h2 style={{ fontSize: '22px' }}>
+              <h2 className="text-xl">
                 {submissionDetail.submission.student_name} 的答案
               </h2>
               <div className="flex flex-gap">
@@ -320,18 +317,11 @@ const TeacherGrading = () => {
             {submissionDetail.answers.map((answer, index) => (
               <div 
                 key={answer.question_id} 
-                className="question"
-                style={{
-                  borderLeft: grades[answer.question_id]?.is_correct === true 
-                    ? '4px solid #4CAF50' 
-                    : grades[answer.question_id]?.is_correct === false 
-                    ? '4px solid #f44336'
-                    : '4px solid #ddd'
-                }}
+                className={`question ${grades[answer.question_id]?.is_correct === true ? 'question--correct' : grades[answer.question_id]?.is_correct === false ? 'question--incorrect' : 'question--pending'}`}
               >
-                <div style={{ marginBottom: '10px' }}>
+                <div className="mb-10">
                   <strong>題目 {index + 1}</strong>
-                  <span style={{ marginLeft: '10px', color: '#666' }}>
+                  <span className="ml-sm text-muted">
                     ({answer.type === 'multiple_choice' ? '選擇題' : answer.type === 'fill_in_blank' ? '填空題' : answer.type === 'short_answer' ? '簡答題' : '改寫句子'}, {answer.points} 分)
                   </span>
                 </div>
@@ -339,16 +329,11 @@ const TeacherGrading = () => {
                 <div className="question-content">{answer.content}</div>
 
                 {answer.type === 'multiple_choice' && answer.options && (
-                  <div style={{ marginTop: '10px', marginBottom: '15px' }}>
+                  <div className="mt-10 mb-15">
                     {answer.options.map((opt, i) => (
                       <div 
                         key={i} 
-                        style={{ 
-                          padding: '8px', 
-                          marginBottom: '5px',
-                          backgroundColor: answer.student_answer === opt ? '#e8f5e9' : '#f5f5f5',
-                          borderRadius: '4px'
-                        }}
+                        className={`grading-option ${answer.student_answer === opt ? 'grading-option--selected' : ''}`}
                       >
                         <strong>{String.fromCharCode(65 + i)})</strong> {opt}
                       </div>
@@ -356,77 +341,43 @@ const TeacherGrading = () => {
                   </div>
                 )}
 
-                <div style={{ 
-                  padding: '12px', 
-                  backgroundColor: answer.student_answer && answer.student_answer.trim() ? '#f0f0f0' : '#ffebee', 
-                  borderRadius: '4px',
-                  marginBottom: '15px',
-                  ...((!answer.student_answer || answer.student_answer.trim() === '') && {
-                    border: '2px dashed #ef5350'
-                  })
-                }}>
+                <div className={`student-answer-box ${(!answer.student_answer || answer.student_answer.trim() === '') ? 'student-answer-box--unanswered' : ''}`}>
                   <strong>學生答案：</strong>
                   {(!answer.student_answer || answer.student_answer.trim() === '') && (
-                    <span style={{ color: '#c62828', fontWeight: 'bold', marginLeft: '8px' }}>
+                    <span className="text-muted unanswered-label">
                       (未作答)
                     </span>
                   )}
-                  <div style={{ marginTop: '5px' }}>
+                  <div className="mt-sm">
                     {answer.student_answer || '未作答'}
                   </div>
                 </div>
 
                 {answer.correct_answer && (
-                  <div style={{ 
-                    padding: '12px', 
-                    backgroundColor: '#e3f2fd', 
-                    borderRadius: '4px',
-                    marginBottom: '15px'
-                  }}>
+                  <div className="ref-answer-display">
                     <strong>參考答案：</strong>
-                    <div style={{ marginTop: '5px' }}>
+                    <div className="mt-sm">
                       {answer.correct_answer}
                     </div>
                   </div>
                 )}
 
                 {/* Grading Section */}
-                <div style={{ 
-                  padding: '15px', 
-                  backgroundColor: '#fff3cd', 
-                  borderRadius: '4px',
-                  marginTop: '15px'
-                }}>
-                  <h4 style={{ marginBottom: '15px' }}>批改</h4>
+                <div className="grading-section">
+                  <h4 className="mb-10">批改</h4>
 
                   {/* 自動判定提示 */}
                   {grades[answer.question_id]?.auto_marked && (
-                    <div style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#fff3e0',
-                      border: '1px solid #ffb74d',
-                      borderRadius: '4px',
-                      marginBottom: '15px',
-                      fontSize: '14px',
-                      color: '#e65100'
-                    }}>
-                      <span style={{ fontWeight: 'bold' }}>ℹ️ 自動判定：</span> 
+                    <div className="auto-mark-notice">
+                      <span className="font-bold">ℹ️ 自動判定：</span> 
                       此題因學生未作答已自動標記為錯誤，如需修改請點選上方按鈕。
                     </div>
                   )}
 
                   {/* 選擇題自動批改提示 */}
                   {grades[answer.question_id]?.auto_graded_mc && (
-                    <div style={{ 
-                      padding: '10px', 
-                      backgroundColor: grades[answer.question_id]?.is_correct ? '#e8f5e9' : '#ffebee',
-                      border: `1px solid ${grades[answer.question_id]?.is_correct ? '#81c784' : '#e57373'}`,
-                      borderRadius: '4px',
-                      marginBottom: '15px',
-                      fontSize: '14px',
-                      color: grades[answer.question_id]?.is_correct ? '#2e7d32' : '#c62828'
-                    }}>
-                      <span style={{ fontWeight: 'bold' }}>
+                    <div className={`auto-grade-notice ${grades[answer.question_id]?.is_correct ? 'auto-grade-notice--correct' : 'auto-grade-notice--incorrect'}`}>
+                      <span className="font-bold">
                         {grades[answer.question_id]?.is_correct ? '✓ 自動批改：' : '✗ 自動批改：'}
                       </span> 
                       此選擇題已根據參考答案自動批改為{grades[answer.question_id]?.is_correct ? '正確' : '錯誤'}，如需修改請點選下方按鈕。
@@ -434,46 +385,18 @@ const TeacherGrading = () => {
                   )}
 
                   {/* 評分結果按鈕 */}
-                  <div style={{ marginBottom: '15px' }}>
+                  <div className="mb-10">
                     <label className="label">評分結果 *</label>
                     <div className="flex flex-gap">
                       <button
                         onClick={() => handleGradeChange(answer.question_id, 'is_correct', true)}
-                        className={
-                          grades[answer.question_id]?.is_correct === true 
-                            ? 'btn btn-success-active'
-                            : 'btn btn-success-inactive'
-                        }
-                        style={{ 
-                          flex: 1,
-                          ...(grades[answer.question_id]?.is_correct === true && {
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            border: '2px solid #45a049',
-                            boxShadow: '0 0 0 3px rgba(76, 175, 80, 0.3)'
-                          })
-                        }}
+                        className={`btn flex-1 ${grades[answer.question_id]?.is_correct === true ? 'btn-grade-correct-active' : 'btn-grade-correct-inactive'}`}
                       >
                         ✓ 正確
                       </button>
                       <button
                         onClick={() => handleGradeChange(answer.question_id, 'is_correct', false)}
-                        className={
-                          grades[answer.question_id]?.is_correct === false 
-                            ? 'btn btn-danger-active'
-                            : 'btn btn-danger-inactive'
-                        }
-                        style={{ 
-                          flex: 1,
-                          ...(grades[answer.question_id]?.is_correct === false && {
-                            backgroundColor: '#f44336',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            border: '2px solid #d32f2f',
-                            boxShadow: '0 0 0 3px rgba(244, 67, 54, 0.3)'
-                          })
-                        }}
+                        className={`btn flex-1 ${grades[answer.question_id]?.is_correct === false ? 'btn-grade-incorrect-active' : 'btn-grade-incorrect-inactive'}`}
                       >
                         ✗ 錯誤
                       </button>
@@ -481,7 +404,7 @@ const TeacherGrading = () => {
                   </div>
 
                   {/* 評語（選填） */}
-                  <div style={{ marginBottom: '15px' }}>
+                  <div className="mb-10">
                     <label className="label">評語（選填）</label>
                     <textarea
                       className="textarea"
@@ -500,7 +423,7 @@ const TeacherGrading = () => {
                   </button>
 
                   {answer.graded_at && (
-                    <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+                    <div className="mt-sm text-sm text-muted">
                       最後批改時間：{new Date(answer.graded_at).toLocaleString('zh-TW')}
                     </div>
                   )}
@@ -508,12 +431,11 @@ const TeacherGrading = () => {
               </div>
             ))}
 
-            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+            <div className="text-center mt-30">
               {submissionDetail.submission.status !== 'graded' && (
                 <button
                   onClick={handleFinalizeGrading}
-                  className="btn btn-primary"
-                  style={{ padding: '15px 40px', fontSize: '18px' }}
+                  className="btn btn-primary btn-lg"
                 >
                   完成批改並發布結果
                 </button>
