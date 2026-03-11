@@ -119,6 +119,15 @@ const partDResult = insertPart.run(
 );
 const partDId = partDResult.lastInsertRowid;
 
+// Part E: 短文回答
+const partEResult = insertPart.run(
+  examId,
+  'Part E. 短文回答',
+  'Answer the following questions in 2-3 sentences.',
+  5
+);
+const partEId = partEResult.lastInsertRowid;
+
 // Insert questions
 const insertQuestion = dbWrapper.prepare(`
   INSERT INTO questions (part_id, type, content, options, correct_answer, order_num)
@@ -229,6 +238,22 @@ const partDQuestions = [
 
 partDQuestions.forEach((q, index) => {
   insertQuestion.run(partDId, 'fill_in_blank', q.content, null, q.correct, index + 1);
+});
+
+// Part E Questions (short answer)
+const partEQuestions = [
+  {
+    content: "What are the main differences between active and passive voice?",
+    correct: "Active voice shows the subject performing the action, while passive voice shows the subject receiving the action."
+  },
+  {
+    content: "Why is it important to use a variety of sentence structures in writing?",
+    correct: "It makes writing more interesting, helps convey different ideas with precision, and improves readability for the reader."
+  }
+];
+
+partEQuestions.forEach((q, index) => {
+  insertQuestion.run(partEId, 'short_answer', q.content, null, q.correct, index + 1);
 });
 
 console.log('✅ Sample questions created');
