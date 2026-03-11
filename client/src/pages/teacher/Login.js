@@ -31,9 +31,9 @@ const TeacherLogin = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '80px' }}>
-      <div className="card" style={{ maxWidth: '500px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '28px', marginBottom: '30px', textAlign: 'center' }}>
+    <div className="container pt-page">
+      <div className="card max-w-sm mx-auto">
+        <h1 className="page-title">
           教師登入
         </h1>
         
@@ -69,22 +69,21 @@ const TeacherLogin = () => {
 
           <button 
             type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
+            className="btn btn-primary w-full" 
             disabled={loading}
           >
             {loading ? '登入中...' : '登入'}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+        <div className="hint-box">
           <strong>預設帳號：</strong>
-          <div style={{ marginTop: '5px' }}>帳號：teacher</div>
+          <div className="mt-sm">帳號：teacher</div>
           <div>密碼：teacher123</div>
         </div>
 
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <a href="/" style={{ color: '#666', textDecoration: 'none' }}>
+        <div className="mt-20 text-center">
+          <a href="/" className="link-back">
             ← 返回首頁
           </a>
         </div>
