@@ -106,7 +106,7 @@ const StudentExam = () => {
 
   if (error) {
     return (
-      <div className="container" style={{ paddingTop: '80px' }}>
+      <div className="container pt-page">
         <div className="alert alert-error">{error}</div>
         <a href="/" className="btn btn-secondary">返回首頁</a>
       </div>
@@ -118,8 +118,8 @@ const StudentExam = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>{exam?.title}</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>學生：{student.name}</p>
+            <h1 className="text-xl">{exam?.title}</h1>
+            <p className="text-muted mt-sm">學生：{student.name}</p>
           </div>
           <button 
             onClick={handleSubmit} 
@@ -141,7 +141,7 @@ const StudentExam = () => {
 
             {part.questions.map((question, index) => (
               <div key={question.id} className="question">
-                <div style={{ marginBottom: '15px' }}>
+                <div className="mb-15">
                   <strong>題目 {index + 1}.</strong>
                 </div>
                 
@@ -173,11 +173,10 @@ const StudentExam = () => {
           </div>
         ))}
 
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+        <div className="text-center mt-40">
           <button 
             onClick={handleSubmit} 
-            className="btn btn-primary"
-            style={{ padding: '15px 40px', fontSize: '18px' }}
+            className="btn btn-primary btn-lg"
             disabled={submitting}
           >
             {submitting ? '交卷中...' : '確認交卷'}
