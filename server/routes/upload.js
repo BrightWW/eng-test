@@ -164,9 +164,12 @@ function parseWordDocument(text) {
     }
 
     // Detect answer section header (various formats) - Check early to stop parsing questions
-    // Supports: "Answer Key:", "標準答案:", "答案:", "Answer:", "英文時態測驗：標準答案 (Answer Key)", "【解答區】"
-    const answerHeaderMatch = line.match(/(Answer\s*Key|標準答案|答案|Answers?|【解答區】)/i);
-    if (answerHeaderMatch && (line.includes('Answer') || line.includes('答案') || line.includes('解答'))) {
+    // Supports: "Answer Key:", "標準答案:", "答案:", "英文時態測驗：標準答案 (Answer Key)", "【解答區】"
+    // Precise detection to avoid matching "Answer: [full sentence]" patterns
+    const answerHeaderMatch = line.match(/(Answer\s*Key|標準答案|【解答區】)/i) ||
+      (line.match(/^Answer[s]?\s*[:：]/i) && line.length < 30) ||
+      (line.match(/答案\s*[:：]/) && line.length < 20);
+    if (answerHeaderMatch) {
       // Save current question before stopping
       if (currentQuestion && currentPart) {
         currentPart.questions.push(currentQuestion);
@@ -228,8 +231,7 @@ function parseWordDocument(text) {
 
     // === NEW: Handle fill-in-blank questions without number prefix ===
     // Format: "Question text ____ (verb)" - contains blank and parentheses with verb
-    if (line.includes('____') && !line.match(/^\d+[\.\)]/) && !line.match(/\(A\)/i)) {
-      // Save previous question if any
+    if (line.includes('____') && !line.match(/^\d+[\.\)]/) && !line.match(/\(A\)/i) && !line.match(/[→\u2192]/) && !/^→/.test(line)) {
       if (currentQuestion) {
         currentPart.questions.push(currentQuestion);
       }
@@ -238,16 +240,15 @@ function parseWordDocument(text) {
       questionNumber++;
       const type = determineQuestionType(currentPart, line);
       
-      currentPart.questions.push({
+      currentQuestion = {
         content: line,
         type: type,
-        options: null,
+        options: type === 'multiple_choice' ? [] : null,
         correct_answer: '',
         points: 1,
         _globalIndex: globalQuestionIndex
-      });
-      currentQuestion = null;
-      expectingOptions = false;
+      };
+      expectingOptions = (type === 'multiple_choice');
       continue;
     }
 
@@ -319,12 +320,10 @@ function parseWordDocument(text) {
         if (prevLine.includes('_') || prevLine.match(/[.?]$/)) {
           questionNumber++;
           globalQuestionIndex++;
-          const type = determineQuestionType(currentPart, prevLine);
-          
           currentQuestion = {
             content: prevLine,
-            type: type,
-            options: type === 'multiple_choice' ? [] : null,
+            type: 'multiple_choice',
+            options: [],
             correct_answer: '',
             points: 1,
             _globalIndex: globalQuestionIndex
@@ -333,6 +332,11 @@ function parseWordDocument(text) {
         }
       }
       
+      if (currentQuestion && currentQuestion.type !== 'multiple_choice') {
+        currentQuestion.type = 'multiple_choice';
+        currentQuestion.options = [];
+      }
+
       if (currentQuestion && currentQuestion.type === 'multiple_choice') {
         currentQuestion.options.push(optionText);
         expectingOptions = true;
@@ -367,24 +371,23 @@ function parseWordDocument(text) {
 
     // Check for combining/rewrite questions FIRST: "sentence text (relative clause) → ____"
     // This is more specific than the generic underscore check below
-    if (/\([^)]+\)[\s\S]*_{5,}/.test(line) && !currentQuestion && line.length > 20) {
-      // This is likely a combining/rewrite question
-      // Extract just the question part (remove everything after and including special chars + underscores)
-      const questionText = line.replace(/[→\u2192\-\s]*_{5,}.*$/, '').trim();
+    if (/\([^)]+\)[\s\S]*_{5,}/.test(line) && line.length > 20) {
+      const questionText = line.replace(/\s*[→\u2192]\s*_{5,}.*$/, '').trim();
       if (questionText.length > 10 && questionText.includes('(')) {
+        if (currentQuestion) {
+          currentPart.questions.push(currentQuestion);
+          currentQuestion = null;
+        }
         questionNumber++;
+        globalQuestionIndex++;
         const type = determineQuestionType(currentPart, questionText);
-        
-        const newQuestion = {
+        currentPart.questions.push({
           content: questionText,
           type: type,
           options: null,
           correct_answer: '',
           points: 1
-        };
-        
-        currentPart.questions.push(newQuestion);
-        // Don't set currentQuestion since this is a complete question
+        });
       }
       continue;
     }
@@ -638,8 +641,9 @@ function determineQuestionType(part, questionContent) {
   const title = part.title.toLowerCase();
   const desc = part.description.toLowerCase();
   
-  if (title.includes('rewrite') || desc.includes('rewrite') ||
-      title.includes('passive') || title.includes('active')) {
+  if ((title.includes('rewrite') || desc.includes('rewrite') ||
+       title.includes('passive') || title.includes('active')) &&
+      !title.includes('combining') && !title.includes('合併')) {
     return 'rewrite';
   } else if (title.includes('fill') || title.includes('填空') ||
              title.includes('combining') || title.includes('合併') ||
