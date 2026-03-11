@@ -15,12 +15,8 @@ const MultipleChoice = ({ question, value, onChange, disabled = false }) => {
           return (
             <div
               key={index}
-              className={`option ${isSelected ? 'selected' : ''}`}
+              className={`option ${isSelected ? 'selected' : ''} ${disabled ? 'option--disabled' : ''}`}
               onClick={() => !disabled && onChange(option)}
-              style={{
-                cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled ? 0.6 : 1
-              }}
             >
               <strong>{optionLabel})</strong> {option}
             </div>

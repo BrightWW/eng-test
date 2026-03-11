@@ -183,8 +183,8 @@ const TeacherExamEditor = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>{exam?.title}</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>出題編輯</p>
+            <h1 className="text-xl">{exam?.title}</h1>
+            <p className="text-muted mt-sm">出題編輯</p>
           </div>
           <Link to="/teacher/dashboard" className="btn btn-secondary">
             返回控制台
@@ -195,7 +195,7 @@ const TeacherExamEditor = () => {
       <div className="container">
         <div className="card">
           <div className="flex-space-between mb-20">
-            <h2 style={{ fontSize: '22px' }}>測驗段落與題目</h2>
+            <h2 className="text-xl">測驗段落與題目</h2>
             <button 
               onClick={() => setShowAddPart(!showAddPart)}
               className="btn btn-primary"
@@ -205,8 +205,8 @@ const TeacherExamEditor = () => {
           </div>
 
           {showAddPart && (
-            <form onSubmit={handleAddPart} className="card" style={{ backgroundColor: '#f9f9f9' }}>
-              <h3 style={{ marginBottom: '15px' }}>新增段落</h3>
+            <form onSubmit={handleAddPart} className="card card-muted">
+              <h3 className="mb-10">新增段落</h3>
               
               <label className="label">段落標題 *</label>
               <input
@@ -237,23 +237,21 @@ const TeacherExamEditor = () => {
           <div key={part.id} className="card">
             <div className="flex-space-between mb-20">
               <div>
-                <h3 style={{ fontSize: '20px', marginBottom: '5px' }}>{part.title}</h3>
+                <h3 className="text-lg mb-10">{part.title}</h3>
                 {part.description && (
-                  <p style={{ color: '#666', fontSize: '14px' }}>{part.description}</p>
+                  <p className="text-muted text-sm">{part.description}</p>
                 )}
               </div>
               <div className="flex flex-gap">
                 <button
                   onClick={() => setShowAddQuestion(showAddQuestion === part.id ? null : part.id)}
-                  className="btn btn-primary"
-                  style={{ fontSize: '14px' }}
+                  className="btn btn-primary btn-sm"
                 >
                   {showAddQuestion === part.id ? '取消' : '+ 新增題目'}
                 </button>
                 <button
                   onClick={() => handleDeletePart(part.id, part.title)}
-                  className="btn btn-danger"
-                  style={{ fontSize: '14px' }}
+                  className="btn btn-danger btn-sm"
                 >
                   刪除段落
                 </button>
@@ -261,8 +259,8 @@ const TeacherExamEditor = () => {
             </div>
 
             {showAddQuestion === part.id && (
-              <form onSubmit={(e) => handleAddQuestion(e, part.id)} className="card" style={{ backgroundColor: '#f0f0f0' }}>
-                <h4 style={{ marginBottom: '15px' }}>新增題目</h4>
+              <form onSubmit={(e) => handleAddQuestion(e, part.id)} className="card card-muted">
+                <h4 className="mb-10">新增題目</h4>
 
                 <label className="label">題型 *</label>
                 <select
@@ -289,11 +287,10 @@ const TeacherExamEditor = () => {
                   <>
                     <label className="label">選項</label>
                     {questionForm.options.map((option, index) => (
-                      <div key={index} className="flex flex-gap mb-10" style={{ alignItems: 'center' }}>
+                      <div key={index} className="flex flex-gap mb-10 flex-align-center">
                         <input
                           type="text"
-                          className="input"
-                          style={{ marginBottom: 0 }}
+                          className="input mb-0"
                           value={option}
                           onChange={(e) => updateOption(index, e.target.value)}
                           placeholder={`選項 ${String.fromCharCode(65 + index)}`}
@@ -302,15 +299,14 @@ const TeacherExamEditor = () => {
                           <button
                             type="button"
                             onClick={() => removeOption(index)}
-                            className="btn btn-danger"
-                            style={{ padding: '8px 12px' }}
+                            className="btn btn-danger btn-sm"
                           >
                             刪除
                           </button>
                         )}
                       </div>
                     ))}
-                    <button type="button" onClick={addOption} className="btn" style={{ marginBottom: '15px' }}>
+                    <button type="button" onClick={addOption} className="btn mb-10">
                       + 新增選項
                     </button>
 
@@ -354,18 +350,17 @@ const TeacherExamEditor = () => {
             )}
 
             {part.questions && part.questions.length > 0 ? (
-              <div style={{ marginTop: '20px' }}>
-                <h4 style={{ marginBottom: '15px' }}>題目列表（{part.questions.length} 題）</h4>
+              <div className="mt-20">
+                <h4 className="mb-10">題目列表（{part.questions.length} 題）</h4>
                 {part.questions.map((question, index) => (
                   <div key={question.id} className="question">
-                    <div className="flex-space-between" style={{ marginBottom: '10px' }}>
+                    <div className="flex-space-between mb-10">
                       <strong>題目 {index + 1}</strong>
                       <div className="flex flex-gap">
                         <span className="badge badge-info">{question.type === 'multiple_choice' ? '選擇題' : question.type === 'fill_in_blank' ? '填空題' : question.type === 'short_answer' ? '簡答題' : '改寫句子'}</span>
                         <button
                           onClick={() => handleDeleteQuestion(question.id)}
-                          className="btn btn-danger"
-                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                          className="btn btn-danger btn-xs"
                         >
                           刪除
                         </button>
@@ -373,21 +368,21 @@ const TeacherExamEditor = () => {
                     </div>
                     <div className="question-content">{question.content}</div>
                     {question.type === 'multiple_choice' && question.options && (
-                      <div style={{ marginTop: '10px' }}>
+                      <div className="mt-sm">
                         {question.options.map((opt, i) => (
-                          <div key={i} style={{ padding: '5px 0' }}>
+                          <div key={i} className="py-xs">
                             <strong>{String.fromCharCode(65 + i)})</strong> {opt}
                           </div>
                         ))}
                         {question.correct_answer && (
-                          <div style={{ marginTop: '10px', color: '#4CAF50' }}>
+                          <div className="mt-sm color-success">
                             <strong>參考答案：</strong>{question.correct_answer}
                           </div>
                         )}
                       </div>
                     )}
                     {question.correct_answer && question.type !== 'multiple_choice' && (
-                      <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                      <div className="ref-answer-box">
                         <strong>參考答案：</strong>{question.correct_answer}
                       </div>
                     )}
@@ -395,7 +390,7 @@ const TeacherExamEditor = () => {
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+              <div className="empty-state">
                 此段落尚未新增題目
               </div>
             )}
