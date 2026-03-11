@@ -118,8 +118,8 @@ const TeacherDashboard = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>教師控制台</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>歡迎，{teacher.username}</p>
+            <h1 className="text-xl">教師控制台</h1>
+            <p className="text-muted mt-sm">歡迎，{teacher.username}</p>
           </div>
           <button onClick={handleLogout} className="btn btn-secondary">
             登出
@@ -134,8 +134,8 @@ const TeacherDashboard = () => {
 
         <div className="card">
           <div className="flex-space-between mb-20">
-            <h2 style={{ fontSize: '22px' }}>測驗管理</h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <h2 className="text-xl">測驗管理</h2>
+            <div className="flex flex-gap">
               <Link to="/teacher/upload" className="btn btn-secondary">
                 📄 上傳 Word 檔
               </Link>
@@ -149,8 +149,8 @@ const TeacherDashboard = () => {
           </div>
 
           {showCreateForm && (
-            <form onSubmit={handleCreateExam} className="card" style={{ backgroundColor: '#f9f9f9' }}>
-              <h3 style={{ marginBottom: '15px' }}>建立新測驗</h3>
+            <form onSubmit={handleCreateExam} className="card card-muted">
+              <h3 className="mb-10">建立新測驗</h3>
               
               <label className="label">測驗標題 *</label>
               <input
@@ -178,10 +178,10 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '20px', marginBottom: '20px' }}>測驗列表</h3>
+          <h3 className="text-lg mb-20">測驗列表</h3>
           
           {exams.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            <div className="empty-state">
               尚未建立任何測驗
             </div>
           ) : (
@@ -201,7 +201,7 @@ const TeacherDashboard = () => {
                     <td>
                       <strong>{exam.title}</strong>
                       {exam.description && (
-                        <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+                        <div className="text-sm text-muted mt-sm">
                           {exam.description}
                         </div>
                       )}
@@ -216,56 +216,43 @@ const TeacherDashboard = () => {
                     </td>
                     <td>
                       {exam.submission_stats ? (
-                        <div style={{ fontSize: '14px' }}>
+                        <div className="text-sm">
                           <div>
-                            <strong style={{ color: '#28a745' }}>
+                            <strong className="color-success">
                               已交卷：{exam.submission_stats.submitted}
                             </strong>
                           </div>
-                          <div style={{ color: '#666', marginTop: '3px' }}>
+                          <div className="text-muted mt-sm">
                             作答中：{exam.submission_stats.in_progress} | 
                             已批改：{exam.submission_stats.graded}
                           </div>
                         </div>
                       ) : (
-                        <span style={{ color: '#999' }}>無資料</span>
+                        <span className="color-muted">無資料</span>
                       )}
                     </td>
                     <td>
                       <div className="flex flex-gap">
-                        <Link to={`/teacher/exam/${exam.id}`} className="btn btn-secondary" style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '14px' }}>
+                        <Link to={`/teacher/exam/${exam.id}`} className="btn btn-secondary btn-sm">
                           編輯題目
                         </Link>
-                        <Link to={`/teacher/exam/${exam.id}/grading`} className="btn btn-primary" style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '14px' }}>
+                        <Link to={`/teacher/exam/${exam.id}/grading`} className="btn btn-primary btn-sm">
                           批改
                         </Link>
                         <button
                           onClick={() => handleActivateExam(exam.id, exam.is_active)}
-                          className={exam.is_active ? "btn" : "btn btn-primary"}
-                          style={{ padding: '6px 12px', fontSize: '14px' }}
+                          className={exam.is_active ? "btn btn-sm" : "btn btn-primary btn-sm"}
                         >
                           {exam.is_active ? '停用' : '啟用'}
                         </button>
                         
                         {/* 視覺分隔線 - 區分常規操作和危險操作 */}
-                        <div style={{ 
-                          borderLeft: '1px solid #ddd', 
-                          margin: '0 8px', 
-                          height: '30px',
-                          alignSelf: 'center'
-                        }}></div>
+                        <div className="action-divider"></div>
                         
                         {/* 刪除測驗按鈕 - 加強標示 */}
                         <button
                           onClick={() => handleDeleteExam(exam.id, exam.title)}
-                          className="btn btn-danger"
-                          style={{ 
-                            padding: '6px 12px', 
-                            fontSize: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px'
-                          }}
+                          className="btn btn-danger btn-sm btn-icon"
                           title="永久刪除此測驗及所有相關資料"
                         >
                           <span role="img" aria-label="delete">🗑️</span>
