@@ -273,6 +273,7 @@ const TeacherExamEditor = () => {
                   <option value="multiple_choice">選擇題</option>
                   <option value="fill_in_blank">填空題</option>
                   <option value="rewrite">改寫句子</option>
+                  <option value="short_answer">簡答題 Short Answer</option>
                 </select>
 
                 <label className="label">題目內容 *</label>
@@ -324,7 +325,7 @@ const TeacherExamEditor = () => {
                   </>
                 )}
 
-                {(questionForm.type === 'fill_in_blank' || questionForm.type === 'rewrite') && (
+                {(questionForm.type === 'fill_in_blank' || questionForm.type === 'rewrite' || questionForm.type === 'short_answer') && (
                   <>
                     <label className="label">參考答案（選填）</label>
                     <textarea
@@ -360,7 +361,7 @@ const TeacherExamEditor = () => {
                     <div className="flex-space-between" style={{ marginBottom: '10px' }}>
                       <strong>題目 {index + 1}</strong>
                       <div className="flex flex-gap">
-                        <span className="badge badge-info">{question.type === 'multiple_choice' ? '選擇題' : question.type === 'fill_in_blank' ? '填空題' : '改寫句子'}</span>
+                        <span className="badge badge-info">{question.type === 'multiple_choice' ? '選擇題' : question.type === 'fill_in_blank' ? '填空題' : question.type === 'short_answer' ? '簡答題' : '改寫句子'}</span>
                         <button
                           onClick={() => handleDeleteQuestion(question.id)}
                           className="btn btn-danger"

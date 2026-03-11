@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import MultipleChoice from '../../components/questions/MultipleChoice';
 import FillInBlank from '../../components/questions/FillInBlank';
+import ShortAnswer from '../../components/questions/ShortAnswer';
 
 const StudentExam = () => {
   const [exam, setExam] = useState(null);
@@ -154,6 +155,14 @@ const StudentExam = () => {
 
                 {(question.type === 'fill_in_blank' || question.type === 'rewrite') && (
                   <FillInBlank
+                    question={question}
+                    value={answers[question.id] || ''}
+                    onChange={(value) => handleAnswerChange(question.id, value)}
+                  />
+                )}
+
+                {question.type === 'short_answer' && (
+                  <ShortAnswer
                     question={question}
                     value={answers[question.id] || ''}
                     onChange={(value) => handleAnswerChange(question.id, value)}

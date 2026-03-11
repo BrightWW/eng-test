@@ -182,7 +182,7 @@ const UploadExam = () => {
                             <div style={{ marginBottom: '5px' }}>
                               <strong>Q{qIndex + 1}.</strong> 
                               <span className="badge badge-info" style={{ marginLeft: '10px' }}>
-                                {q.type === 'multiple_choice' ? '選擇題' : q.type === 'fill_in_blank' ? '填空題' : '改寫題'}
+                                {q.type === 'multiple_choice' ? '選擇題' : q.type === 'fill_in_blank' ? '填空題' : q.type === 'short_answer' ? '簡答題' : '改寫題'}
                               </span>
                             </div>
                             <div>{q.content}</div>
@@ -238,6 +238,7 @@ const UploadExam = () => {
               <li><strong>選項：</strong>以 A), B), C), D) 或 (A), (B) 等格式</li>
               <li><strong>改寫題：</strong>在 Part 標題或說明中包含 "rewrite"</li>
               <li><strong>合併句子：</strong>在 Part 標題中包含 "combining" 或 "合併"</li>
+              <li><strong>簡答題：</strong>在 Part 標題中包含 "short answer" 或 "簡答題"</li>
             </ul>
             <p style={{ marginTop: '15px' }}>
               <strong>提示：</strong>您可以參考專案中的 <code>0206_toeic_test.docx</code> 作為範本。

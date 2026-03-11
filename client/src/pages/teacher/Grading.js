@@ -332,7 +332,7 @@ const TeacherGrading = () => {
                 <div style={{ marginBottom: '10px' }}>
                   <strong>題目 {index + 1}</strong>
                   <span style={{ marginLeft: '10px', color: '#666' }}>
-                    ({answer.type === 'multiple_choice' ? '選擇題' : answer.type === 'fill_in_blank' ? '填空題' : '改寫句子'}, {answer.points} 分)
+                    ({answer.type === 'multiple_choice' ? '選擇題' : answer.type === 'fill_in_blank' ? '填空題' : answer.type === 'short_answer' ? '簡答題' : '改寫句子'}, {answer.points} 分)
                   </span>
                 </div>
 
