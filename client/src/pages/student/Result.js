@@ -62,7 +62,7 @@ const StudentResult = () => {
 
   if (error) {
     return (
-      <div className="container" style={{ paddingTop: '80px' }}>
+      <div className="container pt-page">
         <div className="alert alert-error">{error}</div>
         <button onClick={() => navigate('/')} className="btn btn-secondary">
           返回首頁
@@ -78,8 +78,8 @@ const StudentResult = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>測驗結果</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>學生：{student.name}</p>
+            <h1 className="text-xl">測驗結果</h1>
+            <p className="text-muted mt-sm">學生：{student.name}</p>
           </div>
           <button onClick={handleLogout} className="btn btn-secondary">
             登出
@@ -89,7 +89,7 @@ const StudentResult = () => {
 
       <div className="container">
         <div className="card">
-          <h2 style={{ fontSize: '20px', marginBottom: '20px' }}>作答狀態</h2>
+          <h2 className="text-lg mb-20">作答狀態</h2>
           
           <div className="flex-space-between mb-20">
             <span>提交時間：</span>
@@ -109,13 +109,13 @@ const StudentResult = () => {
             <>
               <div className="flex-space-between mb-20">
                 <span>答對題數：</span>
-                <strong style={{ fontSize: '28px', color: '#4CAF50' }}>
+                <strong className="text-2xl color-success">
                   {submission.total_score} / {answers.length} 題
                 </strong>
               </div>
               <div className="flex-space-between">
                 <span>正確率：</span>
-                <strong style={{ fontSize: '20px', color: '#2196F3' }}>
+                <strong className="text-xl color-secondary">
                   {answers.length > 0 ? ((submission.total_score / answers.length) * 100).toFixed(1) : 0}%
                 </strong>
               </div>
@@ -125,27 +125,18 @@ const StudentResult = () => {
 
         {isGraded ? (
           <div className="card">
-            <h2 style={{ fontSize: '20px', marginBottom: '20px' }}>批改詳情</h2>
+            <h2 className="text-lg mb-20">批改詳情</h2>
             
             {answers.map((answer, index) => (
-              <div key={answer.id} className="question" style={{
-                borderLeft: answer.is_correct ? '4px solid #4CAF50' : '4px solid #f44336'
-              }}>
-                <div style={{ marginBottom: '10px' }}>
+              <div key={answer.id} className={`question ${answer.is_correct ? 'question--correct' : 'question--incorrect'}`}>
+                <div className="mb-10">
                   <strong>題目 {index + 1}</strong>
                   {answer.is_correct !== null && (
-                    <span style={{ marginLeft: '10px' }}>
+                    <span className="ml-sm">
                       {answer.is_correct ? (
                         <span className="badge badge-success">✓ 正確</span>
                       ) : (
-                        <span style={{ 
-                          backgroundColor: '#f8d7da', 
-                          color: '#721c24',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '14px',
-                          fontWeight: '600'
-                        }}>✗ 錯誤</span>
+                        <span className="badge-incorrect">✗ 錯誤</span>
                       )}
                     </span>
                   )}
@@ -153,36 +144,25 @@ const StudentResult = () => {
 
                 <div className="question-content">{answer.question_content}</div>
                 
-                <div style={{ marginTop: '15px' }}>
-                  <div style={{ marginBottom: '10px' }}>
+                <div className="mt-lg">
+                  <div className="mb-10">
                     <strong>你的答案：</strong>
-                    <div style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#f5f5f5', 
-                      borderRadius: '4px',
-                      marginTop: '5px'
-                    }}>
+                    <div className="answer-box">
                       {answer.student_answer || '未作答'}
                     </div>
                   </div>
 
                   {answer.comment && (
-                    <div style={{ marginTop: '10px' }}>
+                    <div className="mt-sm">
                       <strong>教師評語：</strong>
-                      <div style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#fff3cd', 
-                        borderRadius: '4px',
-                        marginTop: '5px',
-                        color: '#856404'
-                      }}>
+                      <div className="comment-box">
                         {answer.comment}
                       </div>
                     </div>
                   )}
 
                   {answer.score !== null && (
-                    <div style={{ marginTop: '10px' }}>
+                    <div className="mt-sm">
                       <strong>得分：</strong> {answer.score} 分
                     </div>
                   )}

@@ -49,7 +49,7 @@ const StudentResultDetail = () => {
 
   if (error) {
     return (
-      <div className="container" style={{ paddingTop: '80px' }}>
+      <div className="container pt-page">
         <div className="alert alert-error">{error}</div>
         <Link to="/student/history" className="btn btn-secondary">
           返回歷史記錄
@@ -80,8 +80,8 @@ const StudentResultDetail = () => {
       <div className="header">
         <div className="header-content">
           <div>
-            <h1 style={{ fontSize: '24px' }}>{submission?.exam_title}</h1>
-            <p style={{ color: '#666', marginTop: '5px' }}>學生：{student.name}</p>
+            <h1 className="text-xl">{submission?.exam_title}</h1>
+            <p className="text-muted mt-sm">學生：{student.name}</p>
           </div>
           <Link to="/student/history" className="btn btn-secondary">
             返回歷史記錄
@@ -91,7 +91,7 @@ const StudentResultDetail = () => {
 
       <div className="container">
         <div className="card">
-          <h2 style={{ fontSize: '20px', marginBottom: '20px' }}>測驗結果摘要</h2>
+          <h2 className="text-xl mb-20">測驗結果摘要</h2>
           
           <div className="flex-space-between mb-20">
             <span>提交時間：</span>
@@ -111,13 +111,13 @@ const StudentResultDetail = () => {
             <>
               <div className="flex-space-between mb-20">
                 <span>答對題數：</span>
-                <strong style={{ fontSize: '28px', color: '#4CAF50' }}>
+                <strong className="text-2xl color-success">
                   {submission.total_score} / {answers.length} 題
                 </strong>
               </div>
               <div className="flex-space-between">
                 <span>正確率：</span>
-                <strong style={{ fontSize: '20px', color: '#2196F3' }}>
+                <strong className="text-xl color-secondary">
                   {answers.length > 0 ? ((submission.total_score / answers.length) * 100).toFixed(1) : 0}%
                 </strong>
               </div>
@@ -128,29 +128,20 @@ const StudentResultDetail = () => {
         {isGraded ? (
           sortedParts.map(([partTitle, partData]) => (
             <div key={partTitle} className="card">
-              <h2 style={{ fontSize: '20px', marginBottom: '20px', borderBottom: '2px solid #4CAF50', paddingBottom: '10px' }}>
+              <h2 className="part-section-title">
                 {partTitle}
               </h2>
               
               {partData.answers.map((answer, index) => (
-                <div key={answer.question_id} className="question" style={{
-                  borderLeft: answer.is_correct ? '4px solid #4CAF50' : answer.is_correct === false ? '4px solid #f44336' : '4px solid #ddd'
-                }}>
-                  <div style={{ marginBottom: '10px' }}>
+                <div key={answer.question_id} className={`question ${answer.is_correct === true ? 'question--correct' : answer.is_correct === false ? 'question--incorrect' : 'question--pending'}`}>
+                  <div className="mb-10">
                     <strong>題目 {index + 1}</strong>
                     {answer.is_correct !== null && (
-                      <span style={{ marginLeft: '10px' }}>
+                      <span className="ml-sm">
                         {answer.is_correct ? (
                           <span className="badge badge-success">✓ 正確</span>
                         ) : (
-                          <span style={{ 
-                            backgroundColor: '#f8d7da', 
-                            color: '#721c24',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            fontWeight: '600'
-                          }}>✗ 錯誤</span>
+                          <span className="badge-incorrect">✗ 錯誤</span>
                         )}
                       </span>
                     )}
@@ -159,7 +150,7 @@ const StudentResultDetail = () => {
                   <div className="question-content">{answer.content}</div>
 
                   {answer.type === 'multiple_choice' && answer.options && (
-                    <div style={{ marginTop: '10px', marginBottom: '15px' }}>
+                    <div className="mt-sm mb-15">
                       {answer.options.map((opt, i) => {
                         const isStudentAnswer = answer.student_answer === opt;
                         const correctLetter = answer.correct_answer?.trim().toUpperCase();
@@ -170,36 +161,16 @@ const StudentResultDetail = () => {
                         return (
                           <div 
                             key={i} 
-                            style={{ 
-                              padding: '8px', 
-                              marginBottom: '5px',
-                              backgroundColor: showCorrectAnswer ? '#e3f2fd' : (isStudentAnswer ? (answer.is_correct ? '#e8f5e9' : '#ffebee') : '#f5f5f5'),
-                              borderRadius: '4px',
-                              border: showCorrectAnswer 
-                                ? '2px solid #2196F3'
-                                : (isStudentAnswer 
-                                  ? (answer.is_correct ? '2px solid #4CAF50' : '2px solid #f44336')
-                                  : '1px solid #ddd')
-                            }}
+                            className={`result-option ${showCorrectAnswer ? 'result-option--hint' : isStudentAnswer ? (answer.is_correct ? 'result-option--correct' : 'result-option--incorrect') : 'result-option--default'}`}
                           >
                             <strong>{String.fromCharCode(65 + i)})</strong> {opt}
                             {showCorrectAnswer && (
-                              <span style={{ 
-                                marginLeft: '10px', 
-                                color: '#1565c0', 
-                                fontWeight: 'bold',
-                                fontSize: '14px'
-                              }}>
+                              <span className="hint-label">
                                 ← 正確答案
                               </span>
                             )}
                             {isStudentAnswer && !answer.is_correct && (
-                              <span style={{ 
-                                marginLeft: '10px', 
-                                color: '#c62828', 
-                                fontWeight: 'bold',
-                                fontSize: '14px'
-                              }}>
+                              <span className="wrong-label">
                                 (你的選擇)
                               </span>
                             )}
@@ -209,16 +180,10 @@ const StudentResultDetail = () => {
                     </div>
                   )}
                   
-                  <div style={{ marginTop: '15px' }}>
-                    <div style={{ marginBottom: '10px' }}>
+                  <div className="mt-15">
+                    <div className="mb-10">
                       <strong>你的答案：</strong>
-                      <div style={{ 
-                        padding: '10px', 
-                        backgroundColor: answer.is_correct ? '#e8f5e9' : '#ffebee', 
-                        borderRadius: '4px',
-                        marginTop: '5px',
-                        border: answer.is_correct ? '1px solid #81c784' : '1px solid #e57373'
-                      }}>
+                      <div className={`answer-box ${answer.is_correct ? 'answer-box--correct' : 'answer-box--incorrect'}`}>
                         {answer.student_answer || '未作答'}
                       </div>
                     </div>
@@ -229,16 +194,9 @@ const StudentResultDetail = () => {
                       const correctIndex = correctLetter.charCodeAt(0) - 65;
                       const correctOptionText = answer.options[correctIndex];
                       return (
-                        <div style={{ marginBottom: '10px' }}>
+                        <div className="mb-10">
                           <strong>正確答案：</strong>
-                          <div style={{ 
-                            padding: '10px', 
-                            backgroundColor: '#e3f2fd', 
-                            borderRadius: '4px',
-                            marginTop: '5px',
-                            border: '1px solid #64b5f6',
-                            color: '#1565c0'
-                          }}>
+                          <div className="correct-answer-box">
                             <strong>({correctLetter})</strong> {correctOptionText}
                           </div>
                         </div>
@@ -246,15 +204,9 @@ const StudentResultDetail = () => {
                     })()}
 
                     {answer.comment && (
-                      <div style={{ marginTop: '10px' }}>
+                      <div className="mt-sm">
                         <strong>教師評語：</strong>
-                        <div style={{ 
-                          padding: '10px', 
-                          backgroundColor: '#fff3cd', 
-                          borderRadius: '4px',
-                          marginTop: '5px',
-                          color: '#856404'
-                        }}>
+                        <div className="comment-box">
                           {answer.comment}
                         </div>
                       </div>
