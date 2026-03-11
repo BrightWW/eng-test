@@ -62,9 +62,9 @@ const StudentEnter = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '80px' }}>
-      <div className="card" style={{ maxWidth: '500px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '28px', marginBottom: '30px', textAlign: 'center' }}>
+    <div className="container pt-page">
+      <div className="card max-w-sm mx-auto">
+        <h1 className="page-title">
           學生作答
         </h1>
         
@@ -74,50 +74,22 @@ const StudentEnter = () => {
 
         {/* Existing students selection */}
         {!loadingStudents && students.length > 0 && (
-          <div style={{ marginBottom: '30px' }}>
+          <div className="mb-30">
             <label className="label">選擇已登入的學生</label>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-              gap: '10px',
-              marginBottom: '20px'
-            }}>
+            <div className="grid-students mb-20">
               {students.map((student) => (
                 <button
                   key={student.id}
                   type="button"
                   onClick={() => handleSelectStudent(student.name)}
                   disabled={loading}
-                  style={{
-                    padding: '12px',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    background: 'white',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s',
-                    color: '#333'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.borderColor = '#4CAF50';
-                    e.target.style.background = '#f0f9f0';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.borderColor = '#e0e0e0';
-                    e.target.style.background = 'white';
-                  }}
+                  className="student-name-btn"
                 >
                   {student.name}
                 </button>
               ))}
             </div>
-            <div style={{ 
-              textAlign: 'center', 
-              color: '#666', 
-              fontSize: '14px',
-              margin: '15px 0'
-            }}>
+            <div className="divider-text">
               或
             </div>
           </div>
@@ -140,16 +112,15 @@ const StudentEnter = () => {
 
           <button 
             type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
+            className="btn btn-primary w-full" 
             disabled={loading}
           >
             {loading ? '進入中...' : '開始測驗'}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <a href="/" style={{ color: '#666', textDecoration: 'none' }}>
+        <div className="mt-20 text-center">
+          <a href="/" className="link-back">
             ← 返回首頁
           </a>
         </div>
